@@ -148,7 +148,7 @@ namespace AliFsmnVadSharp
             return LFR_outputs;
         }
 
-        public float[] apply_lfr2(float[] inputs, int lfr_m, int lfr_n)
+        public float[] ApplyLfr_originalVersion(float[] inputs, int lfr_m, int lfr_n)
         {
             List<float[]> LFR_inputs = new List<float[]>();
 
