@@ -47,7 +47,9 @@ rtf:0.009405292985552491
 输出的数据，例如：[70,2340]，是以毫秒为单位的segement的起止时间，可以以此为依据对音频进行分片。其中静音噪音部分已被去除。
 
 其他说明：
-本例测试环境是windows11,samples的计算使用的是NAudio库。
+测试用例：AliFsmnVadSharp.Examples。
+测试环境：windows11。
+samples的计算使用的是NAudio库。
 
 通过以下链接了解更多：
 https://www.modelscope.cn/models/damo/speech_fsmn_vad_zh-cn-16k-common-pytorch/summary
