@@ -7,6 +7,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AliFsmnVadSharp", "AliFsmnV
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AliFsmnVadSharp.Examples", "AliFsmnVadSharp.Examples\AliFsmnVadSharp.Examples.csproj", "{2FFA4D03-A62B-435B-B57B-7E49209810E1}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{212561CC-9836-4F45-A31B-298EF576F519}"
+	ProjectSection(SolutionItems) = preProject
+		README.md = README.md
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
