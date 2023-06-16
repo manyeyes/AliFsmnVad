@@ -51,6 +51,7 @@ namespace AliFsmnVadSharp
         public SegmentEntity[] GetSegments(List<float[]> samples)
         {
             int waveform_nums = samples.Count;
+            _batchSize = Math.Min(waveform_nums, _batchSize);
             SegmentEntity[] segments = new SegmentEntity[waveform_nums];
             for (int beg_idx = 0; beg_idx < waveform_nums; beg_idx += _batchSize)
             {
@@ -115,6 +116,7 @@ namespace AliFsmnVadSharp
         public SegmentEntity[] GetSegmentsByStep(List<float[]> samples)
         {
             int waveform_nums = samples.Count;
+            _batchSize=Math.Min(waveform_nums, _batchSize);
             SegmentEntity[] segments = new SegmentEntity[waveform_nums];
             for (int beg_idx = 0; beg_idx < waveform_nums; beg_idx += _batchSize)
             {
