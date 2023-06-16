@@ -95,12 +95,7 @@ namespace AliFsmnVadSharp
                     inputs[dim * i + k] = (inputs[dim * i + k] + neg_mean[k]) * inv_stddev[k];
                 }
             }
-
             return inputs;
-            //means = np.tile(self.cmvn[0:1, :dim], (frame, 1))
-            //vars = np.tile(self.cmvn[1:2, :dim], (frame, 1))
-            //inputs = (inputs + means) * vars
-            //return inputs
         }
 
         public float[] ApplyLfr(float[] inputs, int lfr_m, int lfr_n)
@@ -212,25 +207,9 @@ namespace AliFsmnVadSharp
                 Array.Copy(f, 0, LFR_outputs, p * lfr_m * 80, f.Length);
                 p++;
             }
-            LFR_inputs.Clear();
-            LFR_inputs = null;
-            /////////////////////////
-
-            ////LFR_outputs = np.vstack(LFR_inputs).astype(np.float32);
-            //List<float> tempOut = new List<float>();
-            //foreach (float[] f in LFR_inputs)
-            //{
-            //    foreach (float f2 in f)
-            //    {
-            //        tempOut.Add(f2);
-            //    }
-            //}
-            //LFR_inputs.Clear();
-            //float[] LFR_outputs = tempOut.ToArray();
-            //tempOut.Clear();
             return LFR_outputs;
         }
-
+        
         private CmvnEntity LoadCmvn(string mvnFilePath)// -> np.ndarray:
         {
             List<float> means_list = new List<float>();
