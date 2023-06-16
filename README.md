@@ -1,7 +1,7 @@
 # AliFsmnVadSharp
 ##### 简介：
-这是阿里巴巴达摩院提供的FSMN-Monophone VAD模型。
-**本项目基于Net 6.0，使用C#编写，调用Microsoft.ML.OnnxRuntime对onnx模型进行解码，支持跨平台编译。项目以库的形式进行调用，部署非常方便。**
+项目中使用的VAD模型是阿里巴巴达摩院提供的FSMN-Monophone VAD模型。
+**项目基于Net 6.0，使用C#编写，调用Microsoft.ML.OnnxRuntime对onnx模型进行解码，支持跨平台编译。项目以库的形式进行调用，部署非常方便。**
 VAD整体流程的rtf在0.008左右。
 
 ##### 用途：
