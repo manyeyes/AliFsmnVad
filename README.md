@@ -49,7 +49,7 @@ rtf:0.009405292985552491
 其他说明：
 测试用例：AliFsmnVadSharp.Examples。
 测试环境：windows11。
-samples的计算使用的是NAudio库。
+测试用例中samples的计算,使用的是NAudio库。
 
 通过以下链接了解更多：
 https://www.modelscope.cn/models/damo/speech_fsmn_vad_zh-cn-16k-common-pytorch/summary
