@@ -1,17 +1,5 @@
-﻿// ConsoleApp1, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
-// ConsoleApp1.Program
-using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices;
-using System.Text;
-using System.Text.RegularExpressions;
-using AliFsmnVadSharp;
+﻿using AliFsmnVadSharp;
 using AliFsmnVadSharp.Model;
-using Microsoft.Extensions.Logging;
-using Microsoft.ML.OnnxRuntime;
 using NAudio.Wave;
 
 internal static class Program
