@@ -265,8 +265,6 @@ namespace AliFsmnVadSharp
                 vadInputEntity.VadScorer = new E2EVadModel(_vad_post_conf);
                 vadInputEntitys.Add(vadInputEntity);
             }
-            //float[] feats = PadSequence(vadInputEntitys);
-
             return vadInputEntitys;
         }
         /// <summary>
