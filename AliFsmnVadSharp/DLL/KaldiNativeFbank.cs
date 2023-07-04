@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Runtime.InteropServices;
-using AliFsmnVadSharp.Struct;
+using AliFsmnVad.Struct;
 
-namespace AliFsmnVadSharp.DLL
+namespace AliFsmnVad.DLL
 {
     public static class KaldiNativeFbank
     {

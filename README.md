@@ -1,4 +1,4 @@
-# AliFsmnVadSharp
+# AliFsmnVad
 ##### 简介：
 项目中使用的VAD模型是阿里巴巴达摩院提供的FSMN-Monophone VAD模型。
 **项目基于Net 6.0，使用C#编写，调用Microsoft.ML.OnnxRuntime对onnx模型进行解码，支持跨平台编译。项目以库的形式进行调用，部署非常方便。**
@@ -47,7 +47,7 @@ rtf:0.009405292985552491
 输出的数据，例如：[70,2340]，是以毫秒为单位的segement的起止时间，可以以此为依据对音频进行分片。其中静音噪音部分已被去除。
 
 其他说明：
-测试用例：AliFsmnVadSharp.Examples。
+测试用例：AliFsmnVad.Examples。
 测试环境：windows11。
 测试用例中samples的计算,使用的是NAudio库。
 

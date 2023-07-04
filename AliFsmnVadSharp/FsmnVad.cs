@@ -5,18 +5,18 @@ using Microsoft.ML;
 using Microsoft.ML.OnnxRuntime;
 using Microsoft.ML.OnnxRuntime.Tensors;
 using Microsoft.Extensions.Logging;
-using AliFsmnVadSharp.Model;
-using AliFsmnVadSharp.Utils;
+using AliFsmnVad.Model;
+using AliFsmnVad.Utils;
 //using ConsoleApp1.Struct;
 //using ConsoleApp1.DLL;
 
 
-namespace AliFsmnVadSharp
+namespace AliFsmnVad
 {
-    public class AliFsmnVad
+    public class FsmnVad
     {
         private InferenceSession _onnxSession;
-        private readonly ILogger<AliFsmnVad> _logger;
+        private readonly ILogger<FsmnVad> _logger;
         private string _frontend;
         private WavFrontend _wavFrontend;
         private int _batchSize = 1;
@@ -25,7 +25,7 @@ namespace AliFsmnVadSharp
         private EncoderConfEntity _encoderConfEntity;
         private VadPostConfEntity _vad_post_conf;
 
-        public AliFsmnVad(string modelFilePath, string configFilePath, string mvnFilePath, int batchSize = 1)
+        public FsmnVad(string modelFilePath, string configFilePath, string mvnFilePath, int batchSize = 1)
         {
             Microsoft.ML.OnnxRuntime.SessionOptions options = new Microsoft.ML.OnnxRuntime.SessionOptions();
             //options.LogSeverityLevel = OrtLoggingLevel.ORT_LOGGING_LEVEL_INFO;
@@ -45,7 +45,7 @@ namespace AliFsmnVadSharp
             _encoderConfEntity = vadYamlEntity.encoder_conf;
 
             ILoggerFactory loggerFactory = new LoggerFactory();
-            _logger = new Logger<AliFsmnVad>(loggerFactory);
+            _logger = new Logger<FsmnVad>(loggerFactory);
         }
 
         public SegmentEntity[] GetSegments(List<float[]> samples)

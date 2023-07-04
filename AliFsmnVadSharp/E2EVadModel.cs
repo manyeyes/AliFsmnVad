@@ -4,9 +4,9 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using AliFsmnVadSharp.Model;
+using AliFsmnVad.Model;
 
-namespace AliFsmnVadSharp
+namespace AliFsmnVad
 {
     enum VadStateMachine
     {

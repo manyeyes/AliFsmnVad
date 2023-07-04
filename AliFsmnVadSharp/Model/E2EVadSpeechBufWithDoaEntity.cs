@@ -1,5 +1,5 @@
-// AliFsmnVadSharp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
-// AliFsmnVadSharp.Model.E2EVadSpeechBufWithDoaEntity
+// AliFsmnVad, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
+// AliFsmnVad.Model.E2EVadSpeechBufWithDoaEntity
 internal class E2EVadSpeechBufWithDoaEntity
 {
 	private int _start_ms = 0;

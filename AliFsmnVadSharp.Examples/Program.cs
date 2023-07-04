@@ -1,5 +1,5 @@
-﻿using AliFsmnVadSharp;
-using AliFsmnVadSharp.Model;
+﻿using AliFsmnVad;
+using AliFsmnVad.Model;
 using NAudio.Wave;
 
 internal static class Program
@@ -13,7 +13,7 @@ internal static class Program
 		string mvnFilePath = applicationBase + "./speech_fsmn_vad_zh-cn-16k-common-pytorch/vad.mvn";
 		int batchSize = 2;
 		TimeSpan start_time0 = new TimeSpan(DateTime.Now.Ticks);
-		AliFsmnVad aliFsmnVad = new AliFsmnVad(modelFilePath, configFilePath, mvnFilePath, batchSize);
+		FsmnVad aliFsmnVad = new FsmnVad(modelFilePath, configFilePath, mvnFilePath, batchSize);
 		TimeSpan end_time0 = new TimeSpan(DateTime.Now.Ticks);
 		double elapsed_milliseconds0 = end_time0.TotalMilliseconds - start_time0.TotalMilliseconds;
 		Console.WriteLine("load model and init config elapsed_milliseconds:{0}", elapsed_milliseconds0.ToString());

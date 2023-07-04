@@ -3,12 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using AliFsmnVadSharp.Model;
-using AliFsmnVadSharp.DLL;
-using AliFsmnVadSharp.Struct;
+using AliFsmnVad.Model;
+using AliFsmnVad.DLL;
+using AliFsmnVad.Struct;
 using System.Runtime.InteropServices;
 
-namespace AliFsmnVadSharp
+namespace AliFsmnVad
 {
     internal class WavFrontend
     {

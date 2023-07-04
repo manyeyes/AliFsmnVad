@@ -12,7 +12,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\AliFsmnVadSharp\AliFsmnVadSharp.csproj" />
+    <ProjectReference Include="..\AliFsmnVadSharp\AliFsmnVad.csproj" />
   </ItemGroup>
 
 </Project>

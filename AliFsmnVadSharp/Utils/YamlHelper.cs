@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using System.Text.Json;
 using YamlDotNet.Serialization;
 
-namespace AliFsmnVadSharp.Utils
+namespace AliFsmnVad.Utils
 {
     internal class YamlHelper
     {
