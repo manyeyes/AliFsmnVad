@@ -11,8 +11,4 @@
     <PackageReference Include="NAudio" Version="2.1.0" />
   </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\AliFsmnVadSharp\AliFsmnVad.csproj" />
-  </ItemGroup>
-
 </Project>
