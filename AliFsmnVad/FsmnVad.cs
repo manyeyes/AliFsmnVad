@@ -1,4 +1,6 @@
-﻿using System.Linq;
+﻿// See https://github.com/manyeyes for more information
+// Copyright (c)  2023 by manyeyes
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.ML;
@@ -7,12 +9,13 @@ using Microsoft.ML.OnnxRuntime.Tensors;
 using Microsoft.Extensions.Logging;
 using AliFsmnVad.Model;
 using AliFsmnVad.Utils;
-//using ConsoleApp1.Struct;
-//using ConsoleApp1.DLL;
-
 
 namespace AliFsmnVad
 {
+    /// <summary>
+    /// FsmnVad
+    /// Copyright (c)  2023 by manyeyes
+    /// </summary>
     public class FsmnVad
     {
         private InferenceSession _onnxSession;
@@ -56,8 +59,6 @@ namespace AliFsmnVad
             for (int beg_idx = 0; beg_idx < waveform_nums; beg_idx += _batchSize)
             {
                 int end_idx = Math.Min(waveform_nums, beg_idx + _batchSize);
-                //Console.WriteLine(beg_idx + _batchSize);
-                //Console.WriteLine(end_idx);
                 List<float[]> waveform_list = new List<float[]>();
                 for (int i = beg_idx; i < end_idx; i++)
                 {
@@ -121,8 +122,6 @@ namespace AliFsmnVad
             for (int beg_idx = 0; beg_idx < waveform_nums; beg_idx += _batchSize)
             {
                 int end_idx = Math.Min(waveform_nums, beg_idx + _batchSize);
-                //Console.WriteLine(beg_idx + _batchSize);
-                //Console.WriteLine(end_idx);
                 List<float[]> waveform_list = new List<float[]>();
                 for (int i = beg_idx; i < end_idx; i++)
                 {
@@ -363,7 +362,6 @@ namespace AliFsmnVad
                 double[] inv_stddev = arr_inv_stddev.Select(x => (double)Convert.ToDouble(x)).ToArray();
 
                 int dim = neg_mean.Length;
-                //int num_frames = v.Length / dim;
                 // ///////////////////////////////////////////////////
                 for (int j = 0; j < max_speech_length; j++)
                 {
@@ -372,7 +370,6 @@ namespace AliFsmnVad
                     padspeech[j] = (float)((float)(0 + neg_mean[k]) * inv_stddev[k]);
                 }
                 Array.Copy(curr_speech, 0, padspeech, 0, curr_speech.Length);
-                //Array.Copy(nullspeech, 0, padspeech, curr_speech.Length, nullspeech.Length);
                 for (int j = 0; j < padspeech.Length; j++)
                 {
 #pragma warning disable CS8602 // 解引用可能出现空引用。
@@ -381,7 +378,6 @@ namespace AliFsmnVad
                 }
 
             }
-            //Array.Copy(xxx, 0, speech, 0, speech.Length);
             int s = 0;
             for (int i = 0; i < xxx.GetLength(0); i++)
             {

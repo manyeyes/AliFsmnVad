@@ -1,12 +1,12 @@
-﻿using System;
+﻿// See https://github.com/manyeyes for more information
+// Copyright (c)  2023 by manyeyes
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using AliFsmnVad.Model;
-using AliFsmnVad.Struct;
 using KaldiNativeFbankSharp;
-using System.Runtime.InteropServices;
 
 namespace AliFsmnVad
 {
@@ -77,8 +77,7 @@ namespace AliFsmnVad
         }
 
         public float[] ApplyLfr(float[] inputs, int lfr_m, int lfr_n)
-        {            
-            //List<float[]> LFR_inputs = new List<float[]>();
+        {
             int t = inputs.Length / 80;
             int t_lfr = (int)Math.Floor((double)(t / lfr_n));
             float[] input_0 = new float[80];
@@ -98,92 +97,20 @@ namespace AliFsmnVad
             {
                 if (lfr_m <= t - i * lfr_n)
                 {
-                    //float[] input_i = new float[lfr_m * 80];
-                    //Array.Copy(inputs, i * lfr_n * 80, input_i, 0, input_i.Length);
-                    //LFR_inputs.Add(input_i);
                     Array.Copy(inputs, i * lfr_n * 80, LFR_outputs, i* lfr_m * 80, lfr_m * 80);
                 }
                 else
                 {
-                    // process last LFR frame
                     int num_padding = lfr_m - (t - i * lfr_n);
                     float[] frame = new float[lfr_m * 80];
-                    Array.Copy(inputs, i * lfr_n * 80, frame, 0, (t - i * lfr_n) * 80);//frame.Length
+                    Array.Copy(inputs, i * lfr_n * 80, frame, 0, (t - i * lfr_n) * 80);
 
                     for (int j = 0; j < num_padding; j++)
                     {
                         Array.Copy(inputs, (t - 1) * 80, frame, (lfr_m - num_padding + j) * 80, 80);
                     }
-                    //LFR_inputs.Add(frame);
                     Array.Copy(frame, 0, LFR_outputs, i * lfr_m * 80, frame.Length);
                 }
-            }
-            return LFR_outputs;
-        }
-
-        public float[] ApplyLfr_originalVersion(float[] inputs, int lfr_m, int lfr_n)
-        {
-            List<float[]> LFR_inputs = new List<float[]>();
-
-            int t = inputs.Length / 80;
-            int t_lfr = (int)Math.Floor((double)(t / lfr_n));
-            float[] input_0 = new float[80];
-            Array.Copy(inputs, 0, input_0, 0, 80);
-            int tile_x = (lfr_m - 1) / 2;
-            //for(int i = 0; i < tile_x; i++)
-            //{
-            //    LFR_inputs.Add(input_0);
-            //}
-            //float[] left_padding = np.tile(inputs[0], ((lfr_m - 1) / 2, 1));
-            //float[] inputs = np.vstack((left_padding, inputs));
-            t = t + tile_x;
-            float[] inputs_temp = new float[t * 80];
-            for (int i = 0; i < tile_x; i++)
-            {
-                Array.Copy(input_0, 0, inputs_temp, tile_x * 80, 80);
-            }
-            //Array.Copy(input_0, 0, inputs_temp, 0, 80);
-            //Array.Copy(input_0, 0, inputs_temp, 80, 80);
-            Array.Copy(inputs, 0, inputs_temp, tile_x * 80, inputs.Length);
-            inputs = inputs_temp;
-            for (int i = 0; i < t_lfr; i++)
-            {
-                if (lfr_m <= t - i * lfr_n)
-                {
-                    float[] input_i = new float[lfr_m * 80];
-                    Array.Copy(inputs, i * lfr_n * 80, input_i, 0, input_i.Length);
-                    LFR_inputs.Add(input_i);
-                }
-                else
-                {
-                    // process last LFR frame
-                    int num_padding = lfr_m - (t - i * lfr_n);
-                    float[] frame = new float[lfr_m * 80];
-                    Array.Copy(inputs, i * lfr_n * 80, frame, 0, (t - i * lfr_n) * 80);//frame.Length
-
-                    for (int j = 0; j < num_padding; j++)
-                    {
-                        //frame = np.hstack((frame, inputs[-1]));
-                        Array.Copy(inputs, (t - 1) * 80, frame, (lfr_m - num_padding + j) * 80, 80);
-                    }
-                    LFR_inputs.Add(frame);
-                    //float[] frame = inputs[i * lfr_n:].reshape(-1);
-                    //for (int j = 0; j < num_padding; j++)
-                    //{
-                    //    frame = np.hstack((frame, inputs[-1]));
-                    //}
-                    //LFR_inputs.append(frame);
-
-                }
-            }
-            //////////////////////////
-            inputs = null;
-            float[] LFR_outputs = new float[t_lfr * lfr_m * 80];
-            int p = 0;
-            foreach (float[] f in LFR_inputs)
-            {
-                Array.Copy(f, 0, LFR_outputs, p * lfr_m * 80, f.Length);
-                p++;
             }
             return LFR_outputs;
         }

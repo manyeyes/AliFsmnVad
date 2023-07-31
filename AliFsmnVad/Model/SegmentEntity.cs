@@ -1,4 +1,6 @@
-﻿using System;
+﻿// See https://github.com/manyeyes for more information
+// Copyright (c)  2023 by manyeyes
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -13,10 +15,5 @@ namespace AliFsmnVad.Model
 
         public List<int[]> Segment { get => _segment; set => _segment = value; }
         public List<float[]> Waveform { get => _waveform; set => _waveform = value; }
-        //public SegmentEntity()
-        //{
-        //    int[] t=new int[0];
-        //    _segment.Add(t);
-        //}
     }
 }

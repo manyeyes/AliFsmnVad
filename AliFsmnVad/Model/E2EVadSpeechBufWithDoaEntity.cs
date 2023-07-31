@@ -1,5 +1,5 @@
-// AliFsmnVad, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
-// AliFsmnVad.Model.E2EVadSpeechBufWithDoaEntity
+// See https://github.com/manyeyes for more information
+// Copyright (c)  2023 by manyeyes
 internal class E2EVadSpeechBufWithDoaEntity
 {
 	private int _start_ms = 0;

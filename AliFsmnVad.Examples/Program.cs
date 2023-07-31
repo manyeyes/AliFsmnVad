@@ -1,4 +1,6 @@
-﻿using AliFsmnVad;
+﻿// See https://github.com/manyeyes for more information
+// Copyright (c)  2023 by manyeyes
+using AliFsmnVad;
 using AliFsmnVad.Model;
 using NAudio.Wave;
 

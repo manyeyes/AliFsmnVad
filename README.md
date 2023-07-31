@@ -20,9 +20,10 @@ speech_noise_thres：speech的得分减去noise的得分大于此值则判断为
 ###### 2.初始化模型和配置
 ```csharp
 string applicationBase = AppDomain.CurrentDomain.BaseDirectory;
-string modelFilePath = applicationBase + "./speech_fsmn_vad_zh-cn-16k-common-pytorch/model.onnx";
-string configFilePath = applicationBase + "./speech_fsmn_vad_zh-cn-16k-common-pytorch/vad.yaml";
-string mvnFilePath = applicationBase + "./speech_fsmn_vad_zh-cn-16k-common-pytorch/vad.mvn";
+string modelName = "speech_fsmn_vad_zh-cn-16k-common-onnx";
+string modelFilePath = applicationBase + "./"+ modelName + "/model.onnx";
+string configFilePath = applicationBase + "./"+ modelName + "/vad.yaml";
+string mvnFilePath = applicationBase + "./"+ modelName + "/vad.mvn";
 int batchSize = 2;//批量解码
 AliFsmnVad aliFsmnVad = new AliFsmnVad(modelFilePath, configFilePath, mvnFilePath, batchSize);
 ```
@@ -52,4 +53,4 @@ rtf:0.009405292985552491
 测试用例中samples的计算,使用的是NAudio库。
 
 通过以下链接了解更多：
-https://www.modelscope.cn/models/damo/speech_fsmn_vad_zh-cn-16k-common-pytorch/summary
+https://www.modelscope.cn/models/damo/speech_fsmn_vad_zh-cn-16k-common-onnx/summary

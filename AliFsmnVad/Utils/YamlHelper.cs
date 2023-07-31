@@ -1,4 +1,6 @@
-﻿using System;
+﻿// See https://github.com/manyeyes for more information
+// Copyright (c)  2023 by manyeyes
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -23,23 +25,6 @@ namespace AliFsmnVad.Utils
             T info = yamlDeserializer.Deserialize<T>(yamlReader);
             yamlReader.Close();
             return info;
-
-
-            //var r = new StringReader(@"
-            //    scalar: a scalar
-            //    sequence:
-            //      - one
-            //      - two
-            //    ");
-            //var deserializer = new DeserializerBuilder().Build();
-            //var yamlObject = deserializer.Deserialize(r);
-
-            //var serializer = new SerializerBuilder()
-            //    .JsonCompatible()
-            //    .Build();
-
-            //string json = serializer.Serialize(yamlObject);
-            //return json;
         }
     }
 }

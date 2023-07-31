@@ -1,4 +1,6 @@
-﻿using System;
+﻿// See https://github.com/manyeyes for more information
+// Copyright (c)  2023 by manyeyes
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
