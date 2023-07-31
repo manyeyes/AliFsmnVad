@@ -52,5 +52,8 @@ rtf:0.009405292985552491
 测试环境：windows11。
 测试用例中samples的计算,使用的是NAudio库。
 
+##### 模型下载
+https://huggingface.co/manyeyes/speech_fsmn_vad_zh-cn-16k-common-onnx
+
 通过以下链接了解更多：
 https://www.modelscope.cn/models/damo/speech_fsmn_vad_zh-cn-16k-common-onnx/summary

@@ -19,7 +19,7 @@
     <None Update="speech_fsmn_vad_zh-cn-16k-common-onnx\example\0.wav">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="speech_fsmn_vad_zh-cn-16k-common-onnx\model.onnx">
+    <None Update="speech_fsmn_vad_zh-cn-16k-common-onnx\model - 复制.onnx">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="speech_fsmn_vad_zh-cn-16k-common-onnx\vad.mvn">
