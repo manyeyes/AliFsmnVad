@@ -8,9 +8,10 @@ internal static class Program
 	private static void Main()
 	{
 		string applicationBase = AppDomain.CurrentDomain.BaseDirectory;
-		string modelFilePath = applicationBase + "./speech_fsmn_vad_zh-cn-16k-common-pytorch/model.onnx";
-		string configFilePath = applicationBase + "./speech_fsmn_vad_zh-cn-16k-common-pytorch/vad.yaml";
-		string mvnFilePath = applicationBase + "./speech_fsmn_vad_zh-cn-16k-common-pytorch/vad.mvn";
+		string modelName = "speech_fsmn_vad_zh-cn-16k-common-onnx";
+		string modelFilePath = applicationBase + "./"+ modelName + "/model.onnx";
+		string configFilePath = applicationBase + "./"+ modelName + "/vad.yaml";
+		string mvnFilePath = applicationBase + "./"+ modelName + "/vad.mvn";
 		int batchSize = 2;
 		TimeSpan start_time0 = new TimeSpan(DateTime.Now.Ticks);
 		FsmnVad aliFsmnVad = new FsmnVad(modelFilePath, configFilePath, mvnFilePath, batchSize);
@@ -19,9 +20,9 @@ internal static class Program
 		Console.WriteLine("load model and init config elapsed_milliseconds:{0}", elapsed_milliseconds0.ToString());
 		List<float[]> samples = new List<float[]>();
 		TimeSpan total_duration = new TimeSpan(0L);
-		for (int i = 0; i < 2; i++)
+		for (int i = 0; i < 1; i++)
 		{
-			string wavFilePath = string.Format(applicationBase + "./speech_fsmn_vad_zh-cn-16k-common-pytorch/example/{0}.wav", i.ToString());//vad_example
+			string wavFilePath = string.Format(applicationBase + "./"+ modelName + "/example/{0}.wav", i.ToString());//vad_example
 			if (!File.Exists(wavFilePath))
 			{
 				continue;
