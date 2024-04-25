@@ -1,27 +1,20 @@
 ﻿// See https://github.com/manyeyes for more information
 // Copyright (c)  2023 by manyeyes
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using AliFsmnVad.Model;
 using KaldiNativeFbankSharp;
 
 namespace AliFsmnVad
 {
-    internal class WavFrontend
+    internal class WavFrontend : IDisposable
     {
-        private string _mvnFilePath;
+        private bool _disposed;
         private FrontendConfEntity _frontendConfEntity;
         OnlineFbank _onlineFbank;
         private CmvnEntity _cmvnEntity;
-
         private static int _fbank_beg_idx = 0;
 
         public WavFrontend(string mvnFilePath, FrontendConfEntity frontendConfEntity)
         {
-            _mvnFilePath = mvnFilePath;
             _frontendConfEntity = frontendConfEntity;
             _fbank_beg_idx = 0;
             _onlineFbank = new OnlineFbank(
@@ -97,7 +90,7 @@ namespace AliFsmnVad
             {
                 if (lfr_m <= t - i * lfr_n)
                 {
-                    Array.Copy(inputs, i * lfr_n * 80, LFR_outputs, i* lfr_m * 80, lfr_m * 80);
+                    Array.Copy(inputs, i * lfr_n * 80, LFR_outputs, i * lfr_m * 80, lfr_m * 80);
                 }
                 else
                 {
@@ -114,24 +107,21 @@ namespace AliFsmnVad
             }
             return LFR_outputs;
         }
-        
-        private CmvnEntity LoadCmvn(string mvnFilePath)// -> np.ndarray:
+
+        private CmvnEntity LoadCmvn(string mvnFilePath)
         {
             List<float> means_list = new List<float>();
             List<float> vars_list = new List<float>();
-            FileStreamOptions options = new FileStreamOptions();
-            options.Access = FileAccess.Read;
-            options.Mode = FileMode.Open;
-            StreamReader srtReader = new StreamReader(mvnFilePath, options);
+            StreamReader srtReader = new StreamReader(mvnFilePath);
             int i = 0;
             while (!srtReader.EndOfStream)
             {
                 string? strLine = srtReader.ReadLine();
                 if (!string.IsNullOrEmpty(strLine))
                 {
-                    if (strLine.StartsWith("<AddShift>")) 
+                    if (strLine.StartsWith("<AddShift>"))
                     {
-                        i=1;
+                        i = 1;
                         continue;
                     }
                     if (strLine.StartsWith("<Rescale>"))
@@ -139,14 +129,14 @@ namespace AliFsmnVad
                         i = 2;
                         continue;
                     }
-                    if (strLine.StartsWith("<LearnRateCoef>") && i==1)
+                    if (strLine.StartsWith("<LearnRateCoef>") && i == 1)
                     {
                         string[] add_shift_line = strLine.Substring(strLine.IndexOf("[") + 1, strLine.LastIndexOf("]") - strLine.IndexOf("[") - 1).Split(" ");
                         means_list = add_shift_line.Where(x => !string.IsNullOrEmpty(x)).Select(x => float.Parse(x.Trim())).ToList();
                         //i++;
                         continue;
                     }
-                    if (strLine.StartsWith("<LearnRateCoef>") && i==2)
+                    if (strLine.StartsWith("<LearnRateCoef>") && i == 2)
                     {
                         string[] rescale_line = strLine.Substring(strLine.IndexOf("[") + 1, strLine.LastIndexOf("]") - strLine.IndexOf("[") - 1).Split(" ");
                         vars_list = rescale_line.Where(x => !string.IsNullOrEmpty(x)).Select(x => float.Parse(x.Trim())).ToList();
@@ -155,11 +145,35 @@ namespace AliFsmnVad
                     }
                 }
             }
+            srtReader.Close();
             CmvnEntity cmvnEntity = new CmvnEntity();
             cmvnEntity.Means = means_list;
             cmvnEntity.Vars = vars_list;
             return cmvnEntity;
         }
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!_disposed)
+            {
+                if (disposing)
+                {
+                    if (_onlineFbank != null)
+                    {
+                        _onlineFbank.Dispose();
+                    }
+                }
+                _disposed = true;
+            }
+        }
 
+        public void Dispose()
+        {
+            Dispose(disposing: true);
+            GC.SuppressFinalize(this);
+        }
+        ~WavFrontend()
+        {
+            Dispose(_disposed);
+        }
     }
 }
