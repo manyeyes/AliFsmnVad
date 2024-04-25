@@ -1,12 +1,7 @@
 ﻿// See https://github.com/manyeyes for more information
 // Copyright (c)  2023 by manyeyes
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using AliFsmnVad.Model;
+using System.Diagnostics;
 
 namespace AliFsmnVad
 {
@@ -27,7 +22,6 @@ namespace AliFsmnVad
     {
         private VadPostConfEntity _vad_opts = new VadPostConfEntity();
         private WindowDetector _windows_detector = new WindowDetector();
-        // self.encoder = encoder
         // init variables
         private bool _is_final = false;
         private int _data_buf_start_frame = 0;
@@ -56,7 +50,6 @@ namespace AliFsmnVad
         private List<double> _decibel = new List<double>();
         private int _data_buf_size = 0;
         private int _data_buf_all_size = 0;
-        //private List<float[]> _waveform = null;
 
         public E2EVadModel(VadPostConfEntity vadPostConfEntity)
         {
@@ -70,8 +63,6 @@ namespace AliFsmnVad
 
         private void AllResetDetection()
         {
-            // _encoder = encoder
-            // init variables
             _is_final = false;
             _data_buf_start_frame = 0;
             _frm_cnt = 0;
@@ -99,7 +90,6 @@ namespace AliFsmnVad
             _decibel = new List<double>();
             _data_buf_size = 0;
             _data_buf_all_size = 0;
-            //_waveform = null;
             ResetDetection();
         }
 
@@ -141,7 +131,6 @@ namespace AliFsmnVad
                         )
                     );
             }
-
         }
 
         private void ComputeScores(float[,,] scores)
@@ -151,7 +140,7 @@ namespace AliFsmnVad
             _scores = scores;
         }
 
-        private void PopDataBufTillFrame(int frame_idx)// need check again
+        private void PopDataBufTillFrame(int frame_idx)
         {
             while (_data_buf_start_frame < frame_idx)
             {
@@ -191,14 +180,12 @@ namespace AliFsmnVad
                 _output_data_buf.Last().end_ms = _output_data_buf.Last().start_ms;
                 _output_data_buf.Last().doa = 0;
             }
-
             E2EVadSpeechBufWithDoaEntity cur_seg = _output_data_buf.Last();
             if (cur_seg.end_ms != start_frm * _vad_opts.frame_in_ms)
             {
                 Console.WriteLine("warning\n");
             }
-
-            int out_pos = cur_seg.buffer.Length;  // cur_seg.buff现在没做任何操作
+            int out_pos = cur_seg.buffer.Length;
             int data_to_pop = 0;
             if (end_point_is_sent_end)
             {
@@ -214,16 +201,13 @@ namespace AliFsmnVad
                 data_to_pop = _data_buf_size;
                 expected_sample_number = _data_buf_size;
             }
-
-
             cur_seg.doa = 0;
             for (int sample_cpy_out = 0; sample_cpy_out < data_to_pop; sample_cpy_out++)
             {
-                // cur_seg.buffer[out_pos ++] = data_buf_.back();
                 out_pos += 1;
             }
             for (int sample_cpy_out = data_to_pop; sample_cpy_out < expected_sample_number; sample_cpy_out++)
-            {// cur_seg.buffer[out_pos++] = data_buf_.back()
+            {
                 out_pos += 1;
             }
 
@@ -254,7 +238,6 @@ namespace AliFsmnVad
                 // silence_detected_callback_
                 // pass
             }
-
         }
 
         private void OnVoiceDetected(int valid_frame)
@@ -337,7 +320,6 @@ namespace AliFsmnVad
 
         private FrameState GetFrameState(int t)
         {
-
             FrameState frame_state = FrameState.kFrameStateInvalid;
             double cur_decibel = _decibel[t];
             double cur_snr = cur_decibel - _noise_average_decibel;
@@ -349,18 +331,17 @@ namespace AliFsmnVad
                 return frame_state;
             }
 
-
             double sum_score = 0.0D;
             double noise_prob = 0.0D;
             Trace.Assert(_sil_pdf_ids.Length == _vad_opts.silence_pdf_num, "");
             if (_sil_pdf_ids.Length > 0)
             {
-                Trace.Assert(_scores.GetLength(0) == 1, "只支持batch_size = 1的测试");  // 只支持batch_size = 1的测试
+                Trace.Assert(_scores.GetLength(0) == 1, "只支持batch_size = 1的测试"); 
                 float[] sil_pdf_scores = new float[_sil_pdf_ids.Length];
                 int j = 0;
                 foreach (int sil_pdf_id in _sil_pdf_ids)
                 {
-                    sil_pdf_scores[j] = _scores[0,t - _idx_pre_chunk,sil_pdf_id];
+                    sil_pdf_scores[j] = _scores[0, t - _idx_pre_chunk, sil_pdf_id];
                     j++;
                 }
                 sum_score = sil_pdf_scores.Length == 0 ? 0 : sil_pdf_scores.Sum();
@@ -464,15 +445,11 @@ namespace AliFsmnVad
                             start_ms = _output_data_buf[i].start_ms;
                             end_ms = _output_data_buf[i].end_ms;
                             _output_data_buf_offset += 1;
-
                         }
                         int[] segment_ms = new int[] { start_ms, end_ms };
                         segment_batch.Add(segment_ms);
-                        
                     }
-
                 }
-
                 if (segment_batch.Count > 0)
                 {
                     if (segments[batch_num] == null)
@@ -482,13 +459,11 @@ namespace AliFsmnVad
                     segments[batch_num].Segment.AddRange(segment_batch);
                 }
             }
-
             if (is_final)
             {
                 // reset class variables and clear the dict for the next query
                 AllResetDetection();
             }
-
             return segments;
         }
 
@@ -504,8 +479,7 @@ namespace AliFsmnVad
                 frame_state = GetFrameState(_frm_cnt - 1 - i);
                 DetectOneFrame(frame_state, _frm_cnt - 1 - i, false);
             }
-
-            _idx_pre_chunk += _scores.GetLength(1)* _scores.GetLength(0); //_scores.shape[1];
+            _idx_pre_chunk += _scores.GetLength(1) * _scores.GetLength(0); //_scores.shape[1];
             return 0;
         }
 
@@ -515,22 +489,26 @@ namespace AliFsmnVad
             {
                 return 0;
             }
-            for (int i = _vad_opts.nn_eval_block_size - 1; i > -1; i += -1)
+            try
             {
-                FrameState frame_state = FrameState.kFrameStateInvalid;
-                frame_state = GetFrameState(_frm_cnt - 1 - i);
-                if (i != 0)
+                for (int i = _vad_opts.nn_eval_block_size - 1; i > -1; i += -1)
                 {
-                    DetectOneFrame(frame_state, _frm_cnt - 1 - i, false);
+                    FrameState frame_state = FrameState.kFrameStateInvalid;
+                    frame_state = GetFrameState(_frm_cnt - 1 - i);
+                    if (i != 0)
+                    {
+                        DetectOneFrame(frame_state, _frm_cnt - 1 - i, false);
+                    }
+                    else
+                    {
+                        DetectOneFrame(frame_state, _frm_cnt - 1, true);
+                    }
                 }
-                else
-                {
-                    DetectOneFrame(frame_state, _frm_cnt - 1, true);
-                }
-
-
             }
-
+            catch (Exception e)
+            {
+                //
+            }
             return 0;
         }
 
@@ -557,7 +535,7 @@ namespace AliFsmnVad
             int frm_shift_in_ms = _vad_opts.frame_in_ms;
             if (AudioChangeState.kChangeStateSil2Speech == state_change)
             {
-                int silence_frame_count = _continous_silence_frame_count; // no used
+                int silence_frame_count = _continous_silence_frame_count;
                 _continous_silence_frame_count = 0;
                 _pre_end_silence_detected = false;
                 int start_frame = 0;
@@ -570,7 +548,6 @@ namespace AliFsmnVad
                     {
                         OnVoiceDetected(t);
                     }
-
                 }
                 else if (_vad_state_machine == (int)VadStateMachine.kVadInStateInSpeechSegment)
                 {
@@ -583,7 +560,6 @@ namespace AliFsmnVad
                         OnVoiceEnd(cur_frm_idx, false, false);
                         _vad_state_machine = (int)VadStateMachine.kVadInStateEndPointDetected;
                     }
-
                     else if (!is_final_frame)
                     {
                         OnVoiceDetected(cur_frm_idx);
@@ -592,7 +568,6 @@ namespace AliFsmnVad
                     {
                         MaybeOnVoiceEndIfLastFrame(is_final_frame, cur_frm_idx);
                     }
-
                 }
                 else
                 {
@@ -619,7 +594,6 @@ namespace AliFsmnVad
                     {
                         MaybeOnVoiceEndIfLastFrame(is_final_frame, cur_frm_idx);
                     }
-
                 }
                 else
                 {
@@ -650,7 +624,6 @@ namespace AliFsmnVad
                 {
                     return;
                 }
-
             }
             else if (AudioChangeState.kChangeStateSil2Sil == state_change)
             {
@@ -697,7 +670,6 @@ namespace AliFsmnVad
                         OnVoiceEnd(cur_frm_idx, false, false);
                         _vad_state_machine = (int)VadStateMachine.kVadInStateEndPointDetected;
                     }
-
                     else if (_vad_opts.do_extend != 0 && !is_final_frame)
                     {
                         if (_continous_silence_frame_count <= (int)(_vad_opts.lookahead_time_end_point / frm_shift_in_ms))
@@ -705,7 +677,6 @@ namespace AliFsmnVad
                             OnVoiceDetected(cur_frm_idx);
                         }
                     }
-
                     else
                     {
                         MaybeOnVoiceEndIfLastFrame(is_final_frame, cur_frm_idx);
@@ -715,15 +686,12 @@ namespace AliFsmnVad
                 {
                     return;
                 }
-
             }
-
             if (_vad_state_machine == (int)VadStateMachine.kVadInStateEndPointDetected && _vad_opts.detect_mode == (int)VadDetectMode.kVadMutipleUtteranceDetectMode)
             {
                 ResetDetection();
             }
-
         }
-
     }
 }
+

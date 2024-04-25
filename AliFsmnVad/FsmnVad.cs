@@ -1,14 +1,10 @@
 ﻿// See https://github.com/manyeyes for more information
 // Copyright (c)  2023 by manyeyes
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Microsoft.ML;
-using Microsoft.ML.OnnxRuntime;
-using Microsoft.ML.OnnxRuntime.Tensors;
-using Microsoft.Extensions.Logging;
 using AliFsmnVad.Model;
 using AliFsmnVad.Utils;
+using Microsoft.Extensions.Logging;
+using Microsoft.ML.OnnxRuntime;
+using Microsoft.ML.OnnxRuntime.Tensors;
 
 namespace AliFsmnVad
 {
@@ -16,14 +12,15 @@ namespace AliFsmnVad
     /// FsmnVad
     /// Copyright (c)  2023 by manyeyes
     /// </summary>
-    public class FsmnVad
+    public class FsmnVad : IDisposable
     {
+        private bool _disposed;
+
         private InferenceSession _onnxSession;
-        private readonly ILogger<FsmnVad> _logger;
+        private readonly ILogger _logger;
         private string _frontend;
         private WavFrontend _wavFrontend;
         private int _batchSize = 1;
-        //private E2EVadModel _vad_scorer;
         private int _max_end_sil = int.MinValue;
         private EncoderConfEntity _encoderConfEntity;
         private VadPostConfEntity _vad_post_conf;
@@ -43,7 +40,6 @@ namespace AliFsmnVad
             _frontend = vadYamlEntity.frontend;
             _vad_post_conf = vadYamlEntity.vad_post_conf;
             _batchSize = batchSize;
-            //_vad_scorer = new E2EVadModel(_vad_post_conf);
             _max_end_sil = _max_end_sil != int.MinValue ? _max_end_sil : vadYamlEntity.vad_post_conf.max_end_silence_time;
             _encoderConfEntity = vadYamlEntity.encoder_conf;
 
@@ -82,7 +78,6 @@ namespace AliFsmnVad
                             {
                                 segments[batch_num] = new SegmentEntity();
                             }
-                            //segments[batch_num].Segment.AddRange(segments_part[batch_num - beg_idx].Segment);
                             segments[batch_num].Segment.AddRange(segments_part[0].Segment); //
 #pragma warning restore CS8602 // 解引用可能出现空引用。
 
@@ -99,7 +94,6 @@ namespace AliFsmnVad
                     List<float[]> segment_waveforms = new List<float[]>();
                     foreach (int[] segment in segments[beg_idx + batch_num].Segment)
                     {
-                        // (int)(16000 * (segment[0] / 1000.0) * 2);
                         int frame_length = (((6000 * 400) / 400 - 1) * 160 + 400) / 60 / 1000;
                         int frame_start = segment[0] * frame_length;
                         int frame_end = segment[1] * frame_length;
@@ -117,7 +111,7 @@ namespace AliFsmnVad
         public SegmentEntity[] GetSegmentsByStep(List<float[]> samples)
         {
             int waveform_nums = samples.Count;
-            _batchSize=Math.Min(waveform_nums, _batchSize);
+            _batchSize = Math.Min(waveform_nums, _batchSize);
             SegmentEntity[] segments = new SegmentEntity[waveform_nums];
             for (int beg_idx = 0; beg_idx < waveform_nums; beg_idx += _batchSize)
             {
@@ -187,9 +181,8 @@ namespace AliFsmnVad
                                 {
                                     segments[beg_idx + batch_num] = new SegmentEntity();
                                 }
-                                if (segments_part[0] != null)//segments_part[batch_num]!=null
+                                if (segments_part[0] != null)
                                 {
-                                    //segments[beg_idx + batch_num].Segment.AddRange(segments_part[batch_num].Segment);
                                     segments[beg_idx + batch_num].Segment.AddRange(segments_part[0].Segment);
                                 }
 #pragma warning restore CS8602 // 解引用可能出现空引用。
@@ -205,14 +198,13 @@ namespace AliFsmnVad
                 }
                 for (int batch_num = 0; batch_num < _batchSize; batch_num++)
                 {
-                    List<float[]> segment_waveforms=new List<float[]>();
+                    List<float[]> segment_waveforms = new List<float[]>();
                     foreach (int[] segment in segments[beg_idx + batch_num].Segment)
                     {
-                        // (int)(16000 * (segment[0] / 1000.0) * 2);
                         int frame_length = (((6000 * 400) / 400 - 1) * 160 + 400) / 60 / 1000;
                         int frame_start = segment[0] * frame_length;
                         int frame_end = segment[1] * frame_length;
-                        if(frame_end > waveform_list[batch_num].Length)
+                        if (frame_end > waveform_list[batch_num].Length)
                         {
                             break;
                         }
@@ -222,8 +214,12 @@ namespace AliFsmnVad
                     }
                     segments[beg_idx + batch_num].Waveform.AddRange(segment_waveforms);
                 }
-
+                waveform_list = new List<float[]>();
+                waveform_list = null;
+                vadInputEntitys = null;
+                in_cache = null;
             }
+
             return segments;
         }
 
@@ -282,8 +278,6 @@ namespace AliFsmnVad
 
             for (int i = 0; i < oneDimObj.Length; i++)
             {
-                //核心思想把握每个维度的值多久变一次与设置最大值，变化频率设置用除法，设置最大值用求余
-                //第二及之后的维度最大值为自身维度最大值 -1（意思就是最后需要对自身维度最大值求余）
                 threeDimObj[i / (wid * height), (i / height) % wid, i % height] = oneDimObj[i];
             }
             return threeDimObj;
@@ -292,10 +286,9 @@ namespace AliFsmnVad
         private List<VadOutputEntity> Infer(List<VadInputEntity> vadInputEntitys)
         {
             List<VadOutputEntity> vadOutputEntities = new List<VadOutputEntity>();
-            //float[] padSequence = PadSequence(modelInputs);
             foreach (VadInputEntity vadInputEntity in vadInputEntitys)
             {
-                int batchSize = 1;//_batchSize                
+                int batchSize = 1;             
                 var inputMeta = _onnxSession.InputMetadata;
                 var container = new List<NamedOnnxValue>();
                 int[] dim = new int[] { batchSize, vadInputEntity.Speech.Length / 400 / batchSize, 400 };
@@ -355,17 +348,13 @@ namespace AliFsmnVad
                 float[] nullspeech = new float[max_speech_length - modelInputs[i].SpeechLength];
                 float[]? curr_speech = modelInputs[i].Speech;
                 float[] padspeech = new float[max_speech_length];
-                // ///////////////////////////////////////////////////
                 var arr_neg_mean = _onnxSession.ModelMetadata.CustomMetadataMap["neg_mean"].ToString().Split(',').ToArray();
                 double[] neg_mean = arr_neg_mean.Select(x => (double)Convert.ToDouble(x)).ToArray();
                 var arr_inv_stddev = _onnxSession.ModelMetadata.CustomMetadataMap["inv_stddev"].ToString().Split(',').ToArray();
                 double[] inv_stddev = arr_inv_stddev.Select(x => (double)Convert.ToDouble(x)).ToArray();
-
                 int dim = neg_mean.Length;
-                // ///////////////////////////////////////////////////
                 for (int j = 0; j < max_speech_length; j++)
                 {
-                    //padspeech[j] = (0 + neg_mean[k]) * inv_stddev[k];//(float)11.0000010;
                     int k = new Random().Next(0, dim);
                     padspeech[j] = (float)((float)(0 + neg_mean[k]) * inv_stddev[k]);
                 }
@@ -389,17 +378,41 @@ namespace AliFsmnVad
             }
             return speech;
         }
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!_disposed)
+            {
+                if (disposing)
+                {
+                    if (_onnxSession != null)
+                    {
+                        _onnxSession.Dispose();
+                    }
+                    if (_wavFrontend != null)
+                    {
+                        _wavFrontend.Dispose();
+                    }
+                    if (_encoderConfEntity != null)
+                    {
+                        _encoderConfEntity = null;
+                    }
+                    if (_vad_post_conf != null)
+                    {
+                        _vad_post_conf = null;
+                    }
+                }
+                _disposed = true;
+            }
+        }
 
-
-
-
-
-
-
-
-
-
-
-
+        public void Dispose()
+        {
+            Dispose(disposing: true);
+            GC.SuppressFinalize(this);
+        }
+        ~FsmnVad()
+        {
+            Dispose(_disposed);
+        }
     }
 }
