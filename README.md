@@ -17,6 +17,12 @@ speech_noise_thres：speech的得分减去noise的得分大于此值则判断为
 
 ##### 调用方式：
 ###### 1.添加项目引用
+```csharp
+using AliFsmnVad;
+using AliFsmnVad.Model;
+using NAudio.Wave;
+```
+
 ###### 2.初始化模型和配置
 ```csharp
 string applicationBase = AppDomain.CurrentDomain.BaseDirectory;
