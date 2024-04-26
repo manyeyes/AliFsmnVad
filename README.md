@@ -36,7 +36,16 @@ SegmentEntity[] segments_duration = aliFsmnVad.GetSegments(samples);
 ```csharp
 SegmentEntity[] segments_duration = aliFsmnVad.GetSegmentsByStep(samples);
 ```
-###### 4.输出结果：
+###### 4.获取结果
+```csharp
+//遍历segments_duration
+foreach (SegmentEntity segment in segments_duration)
+{
+    //segment.Waveform 是vad切分后的语音片段sample
+	//segment.Segment 是每一段语音对应的时间戳
+}
+```
+输出相应时间戳:
 ```
 load model and init config elapsed_milliseconds:463.5390625
 vad infer result:
@@ -47,13 +56,22 @@ rtf:0.009405292985552491
 ```
 输出的数据，例如：[70,2340]，是以毫秒为单位的segement的起止时间，可以以此为依据对音频进行分片。其中静音噪音部分已被去除。
 
-其他说明：
+##### 语音识别
+将segment.Waveform（见上述4）作为参数，调用 AliParaformerAsr 、K2TransducerAsr、SherpaOnnxSharp的offlineRecognizer的相应方法执行语音识别任务。具体请参考相应示例。
+
+##### 其他说明：
 测试用例：AliFsmnVad.Examples。
-测试环境：windows11。
+支持平台：
+Windows 7 SP1或更高版本,
+macOS 10.13 (High Sierra) 或更高版本,ios等，
+Linux 发行版（需要特定的依赖关系，详见.NET 6支持的Linux发行版列表），
+Android（Android 5.0 (API 21) 或更高版本）。
+
 测试用例中samples的计算,使用的是NAudio库。
 
 ##### 模型下载
 https://huggingface.co/manyeyes/speech_fsmn_vad_zh-cn-16k-common-onnx
+https://www.modelscope.cn/models/manyeyes/alifsmnvad-onnx
 
 通过以下链接了解更多：
 https://www.modelscope.cn/models/damo/speech_fsmn_vad_zh-cn-16k-common-onnx/summary
