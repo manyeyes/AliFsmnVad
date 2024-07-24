@@ -1,7 +1,10 @@
 # AliFsmnVad
 ##### 简介：
-项目中使用的VAD模型是阿里巴巴达摩院提供的FSMN-Monophone VAD模型。
-**项目基于Net 6.0，使用C#编写，调用Microsoft.ML.OnnxRuntime对onnx模型进行解码，支持跨平台编译。项目以库的形式进行调用，部署非常方便。**
+
+**项目功能：语音端点检测。**
+
+**项目使用C#编写，调用Microsoft.ML.OnnxRuntime对onnx模型进行解码，支持框架.Net6.0+，支持跨平台编译，支持AOT编译。项目以库的形式进行调用，部署非常方便。**
+
 VAD整体流程的rtf在0.008左右。
 
 ##### 用途：
@@ -20,7 +23,6 @@ speech_noise_thres：speech的得分减去noise的得分大于此值则判断为
 ```csharp
 using AliFsmnVad;
 using AliFsmnVad.Model;
-using NAudio.Wave;
 ```
 
 ###### 2.初始化模型和配置
@@ -72,12 +74,15 @@ Windows 7 SP1或更高版本,
 macOS 10.13 (High Sierra) 或更高版本,ios等，
 Linux 发行版（需要特定的依赖关系，详见.NET 6支持的Linux发行版列表），
 Android（Android 5.0 (API 21) 或更高版本）。
-
-测试用例中samples的计算,使用的是NAudio库。
+示例中计算音频samples：NAudio库。
 
 ##### 模型下载
 https://huggingface.co/manyeyes/speech_fsmn_vad_zh-cn-16k-common-onnx
 https://www.modelscope.cn/models/manyeyes/alifsmnvad-onnx
 
-通过以下链接了解更多：
-https://www.modelscope.cn/models/damo/speech_fsmn_vad_zh-cn-16k-common-onnx/summary
+官方模型介绍：
+https://www.modelscope.cn/models/damo/speech_fsmn_vad_zh-cn-16k-common-onnx
+
+参考:
+---------
+https://github.com/modelscope/FunASR
