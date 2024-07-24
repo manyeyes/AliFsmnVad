@@ -1,8 +1,8 @@
 ﻿// See https://github.com/manyeyes for more information
 // Copyright (c)  2023 by manyeyes
 using AliFsmnVad;
+using AliFsmnVad.Examples.Utils;
 using AliFsmnVad.Model;
-using NAudio.Wave;
 
 internal static class Program
 {
@@ -24,21 +24,22 @@ internal static class Program
 		TimeSpan total_duration = new TimeSpan(0L);
 		for (int i = 0; i < 1; i++)
 		{
-			string wavFilePath = string.Format(applicationBase + "./"+ modelName + "/example/{0}.wav", i.ToString());//vad_example
+			string wavFilePath = string.Format(applicationBase + "./"+ modelName + "/example/{0}.wav", i.ToString());
 			if (!File.Exists(wavFilePath))
 			{
 				continue;
 			}
-			AudioFileReader _audioFileReader = new AudioFileReader(wavFilePath);
-			byte[] datas = new byte[_audioFileReader.Length];
-			_audioFileReader.Read(datas, 0, datas.Length);
-			TimeSpan duration = _audioFileReader.TotalTime;
-			float[] wavdata = new float[datas.Length / 4];
-			Buffer.BlockCopy(datas, 0, wavdata, 0, datas.Length);
-			float[] sample = wavdata.Select((float x) => x * 32768f).ToArray();
-			samples.Add(wavdata);
-			total_duration += duration;			
-		}
+            TimeSpan duration = TimeSpan.Zero;
+            //supports Windows, Mac, and Linux
+            //float[] sample = AudioHelper.GetFileSamples(wavFilePath: wavFilePath,ref duration);
+            //supports Windows only
+            float[]? sample = AudioHelper.GetMediaSample(mediaFilePath: wavFilePath, ref duration);
+            if (sample != null)
+            {
+                samples.Add(sample);
+                total_duration += duration;
+            }	
+        }
 		TimeSpan start_time = new TimeSpan(DateTime.Now.Ticks);
 		//SegmentEntity[] segments_duration = aliFsmnVad.GetSegments(samples);
 		SegmentEntity[] segments_duration = aliFsmnVad.GetSegmentsByStep(samples);
