@@ -34,9 +34,9 @@ jobs:
         dotnet-version: ${{ matrix.dotnet-version }}
 
     - name: Install Android SDK dependencies (Linux)
-      run: sudo apt-get update && sudo apt-get install -y libopenjp2-7 libfontconfig1 libc6-dev
       if: matrix.os == 'ubuntu-latest' && contains(matrix.target-frameworks, 'android')
-
+      run: sudo apt-get update && sudo apt-get install -y libopenjp2-7 libfontconfig1 libc6-dev
+      
     # 还原当前系统所需的工作负载（仅在需要时）
     - name: Restore .NET workloads
       run: dotnet workload restore
