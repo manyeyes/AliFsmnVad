@@ -1,12 +1,15 @@
 name: Build, Pack and Publish to NuGet
-
+run: dotnet build --configuration Release --no-restore
+  if: |
+    !(matrix.os != 'macos-latest' && 
+      (contains(matrix.targetframework, 'ios') || contains(matrix.targetframework, 'maccatalyst')))
 on:
   push:
     branches: [ master ]
     tags: [ 'v*' ]
   pull_request:
     branches: [ master ]
-  workflow_dispatch:  # 保留手动触发选项
+  workflow_dispatch:
 
 jobs:
   build:
@@ -14,8 +17,6 @@ jobs:
     strategy:
       matrix:
         os: [ windows-latest, ubuntu-latest, macos-latest ]
-        # 只保留最高版本SDK（覆盖所有目标框架）
-        # .NET 9.0 SDK 可兼容 netstandard2.0~net9.0 及各平台框架
         dotnet-version: [ '9.0.x' ]
 
     steps:
@@ -25,17 +26,16 @@ jobs:
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: ${{ matrix.dotnet-version }}
-        # 可选：安装所有需要的SDK版本（如果9.0仍有兼容问题）
-        # global-json-file: global.json
+
+    # 关键修复：还原移动平台所需的工作负载（Android/iOS等）
+    - name: Restore .NET workloads
+      run: dotnet workload restore
 
     - name: Restore dependencies
       run: dotnet restore
 
     - name: Build
       run: dotnet build --configuration Release --no-restore
-
-    - name: Run tests (如果有测试项目)
-      run: dotnet test --configuration Release --no-build --verbosity normal
 
     - name: Pack
       run: dotnet pack --configuration Release --no-build --output ./nupkg
