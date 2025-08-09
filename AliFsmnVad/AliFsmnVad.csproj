@@ -6,6 +6,20 @@
     <ImplicitUsings>enable</ImplicitUsings>
 	  <LangVersion>10.0</LangVersion>
     <Nullable>enable</Nullable>
+			<!-- info -->
+			<PackageId>ManySpeech.AliFsmnVad</PackageId>
+			<Version>1.0.7</Version>
+			<Authors>manyeyes</Authors>
+			<Summary>C# library for decoding Fsmn Vad model , used in speech activity detection</Summary>
+			<Description>16k Universal VAD Model: Can be used to detect the start and end time points of effective speech in long speech segments FSMN Monochrome VAD is an efficient speech endpoint detection model proposed by the Speech Team of Damo Institute. It is used to detect the start and end time information of valid speech in input audio, and input the detected valid audio segments into the recognition engine for recognition, reducing recognition errors caused by invalid speech.</Description>
+			<Copyright>copyright@2024 manyeyes</Copyright>
+			<PackageProjectUrl>https://github.com/manyeyes/AliFsmnVad</PackageProjectUrl>
+			<RepositoryUrl>https://github.com/manyeyes/AliFsmnVad</RepositoryUrl>
+			<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+			<IncludeSymbols>true</IncludeSymbols>
+			<SymbolPackageFormat>snupkg</SymbolPackageFormat>
+			<Nullable>enable</Nullable>
+			<LangVersion>latest</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>
