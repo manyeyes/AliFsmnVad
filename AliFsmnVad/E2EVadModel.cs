@@ -22,6 +22,7 @@ namespace AliFsmnVad
     {
         private VadPostConfEntity _vad_opts = new VadPostConfEntity();
         private WindowDetector _windows_detector = new WindowDetector();
+        // self.encoder = encoder
         // init variables
         private bool _is_final = false;
         private int _data_buf_start_frame = 0;
@@ -63,6 +64,8 @@ namespace AliFsmnVad
 
         private void AllResetDetection()
         {
+            // _encoder = encoder
+            // init variables
             _is_final = false;
             _data_buf_start_frame = 0;
             _frm_cnt = 0;
@@ -90,6 +93,7 @@ namespace AliFsmnVad
             _decibel = new List<double>();
             _data_buf_size = 0;
             _data_buf_all_size = 0;
+            //_waveform = null;
             ResetDetection();
         }
 
@@ -131,6 +135,7 @@ namespace AliFsmnVad
                         )
                     );
             }
+
         }
 
         private void ComputeScores(float[,,] scores)
@@ -140,7 +145,7 @@ namespace AliFsmnVad
             _scores = scores;
         }
 
-        private void PopDataBufTillFrame(int frame_idx)
+        private void PopDataBufTillFrame(int frame_idx)// need check again
         {
             while (_data_buf_start_frame < frame_idx)
             {
@@ -180,12 +185,14 @@ namespace AliFsmnVad
                 _output_data_buf.Last().end_ms = _output_data_buf.Last().start_ms;
                 _output_data_buf.Last().doa = 0;
             }
+
             E2EVadSpeechBufWithDoaEntity cur_seg = _output_data_buf.Last();
             if (cur_seg.end_ms != start_frm * _vad_opts.frame_in_ms)
             {
                 Console.WriteLine("warning\n");
             }
-            int out_pos = cur_seg.buffer.Length;
+
+            int out_pos = cur_seg.buffer.Length;  // cur_seg.buff现在没做任何操作
             int data_to_pop = 0;
             if (end_point_is_sent_end)
             {
@@ -201,13 +208,16 @@ namespace AliFsmnVad
                 data_to_pop = _data_buf_size;
                 expected_sample_number = _data_buf_size;
             }
+
+
             cur_seg.doa = 0;
             for (int sample_cpy_out = 0; sample_cpy_out < data_to_pop; sample_cpy_out++)
             {
+                // cur_seg.buffer[out_pos ++] = data_buf_.back();
                 out_pos += 1;
             }
             for (int sample_cpy_out = data_to_pop; sample_cpy_out < expected_sample_number; sample_cpy_out++)
-            {
+            {// cur_seg.buffer[out_pos++] = data_buf_.back()
                 out_pos += 1;
             }
 
@@ -238,6 +248,7 @@ namespace AliFsmnVad
                 // silence_detected_callback_
                 // pass
             }
+
         }
 
         private void OnVoiceDetected(int valid_frame)
@@ -320,8 +331,12 @@ namespace AliFsmnVad
 
         private FrameState GetFrameState(int t)
         {
+            //if (t >= _decibel.Count)
+            //{
+            //    return FrameState.kFrameStateSil;
+            //}
             FrameState frame_state = FrameState.kFrameStateInvalid;
-            double cur_decibel = _decibel[t];
+            double cur_decibel = t >= _decibel.Count?0:_decibel[t];
             double cur_snr = cur_decibel - _noise_average_decibel;
             // for each frame, calc log posterior probability of each state
             if (cur_decibel < _vad_opts.decibel_thres)
@@ -331,17 +346,18 @@ namespace AliFsmnVad
                 return frame_state;
             }
 
+
             double sum_score = 0.0D;
             double noise_prob = 0.0D;
             Trace.Assert(_sil_pdf_ids.Length == _vad_opts.silence_pdf_num, "");
             if (_sil_pdf_ids.Length > 0)
             {
-                Trace.Assert(_scores.GetLength(0) == 1, "只支持batch_size = 1的测试"); 
+                Trace.Assert(_scores.GetLength(0) == 1, "只支持batch_size = 1的测试");  // 只支持batch_size = 1的测试
                 float[] sil_pdf_scores = new float[_sil_pdf_ids.Length];
                 int j = 0;
                 foreach (int sil_pdf_id in _sil_pdf_ids)
                 {
-                    sil_pdf_scores[j] = _scores[0, t - _idx_pre_chunk, sil_pdf_id];
+                    sil_pdf_scores[j] = _scores[0,t - _idx_pre_chunk,sil_pdf_id];
                     j++;
                 }
                 sum_score = sil_pdf_scores.Length == 0 ? 0 : sil_pdf_scores.Sum();
@@ -390,79 +406,91 @@ namespace AliFsmnVad
             bool is_final = false, int max_end_sil = 800, bool online = false
             )
         {
-            _max_end_sil_frame_cnt_thresh = max_end_sil - _vad_opts.speech_to_sil_time_thres;
-            // compute decibel for each frame
-            ComputeDecibel(waveform);
-            ComputeScores(score);
-            if (!is_final)
-            {
-                DetectCommonFrames();
-            }
-            else
-            {
-                DetectLastFrames();
-            }
             int batchSize = score.GetLength(0);
             SegmentEntity[] segments = new SegmentEntity[batchSize];
-            for (int batch_num = 0; batch_num < batchSize; batch_num++) // only support batch_size = 1 now
+            _max_end_sil_frame_cnt_thresh = max_end_sil - _vad_opts.speech_to_sil_time_thres;
+            try
             {
-                List<int[]> segment_batch = new List<int[]>();
-                if (_output_data_buf.Count > 0)
+                // compute decibel for each frame
+                ComputeDecibel(waveform);
+                ComputeScores(score);
+                if (!is_final)
                 {
-                    for (int i = _output_data_buf_offset; i < _output_data_buf.Count; i++)
+                    DetectCommonFrames();
+                }
+                else
+                {
+                    DetectLastFrames();
+                }
+                for (int batch_num = 0; batch_num < batchSize; batch_num++) // only support batch_size = 1 now
+                {
+                    List<int[]> segment_batch = new List<int[]>();
+                    if (_output_data_buf.Count > 0)
                     {
-                        int start_ms;
-                        int end_ms;
-                        if (online)
+                        for (int i = _output_data_buf_offset; i < _output_data_buf.Count; i++)
                         {
-                            if (!_output_data_buf[i].contain_seg_start_point)
+                            int start_ms;
+                            int end_ms;
+                            if (online)
                             {
-                                continue;
-                            }
-                            if (!_next_seg && !_output_data_buf[i].contain_seg_end_point)
-                            {
-                                continue;
-                            }
-                            start_ms = _next_seg ? _output_data_buf[i].start_ms : -1;
-                            if (_output_data_buf[i].contain_seg_end_point)
-                            {
-                                end_ms = _output_data_buf[i].end_ms;
-                                _next_seg = true;
-                                _output_data_buf_offset += 1;
+                                if (!_output_data_buf[i].contain_seg_start_point)
+                                {
+                                    continue;
+                                }
+                                if (!_next_seg && !_output_data_buf[i].contain_seg_end_point)
+                                {
+                                    continue;
+                                }
+                                start_ms = _next_seg ? _output_data_buf[i].start_ms : -1;
+                                if (_output_data_buf[i].contain_seg_end_point)
+                                {
+                                    end_ms = _output_data_buf[i].end_ms;
+                                    _next_seg = true;
+                                    _output_data_buf_offset += 1;
+                                }
+                                else
+                                {
+                                    end_ms = -1;
+                                    _next_seg = false;
+                                }
                             }
                             else
                             {
-                                end_ms = -1;
-                                _next_seg = false;
+                                if (!is_final && (!_output_data_buf[i].contain_seg_start_point || !_output_data_buf[i].contain_seg_end_point))
+                                {
+                                    continue;
+                                }
+                                start_ms = _output_data_buf[i].start_ms;
+                                end_ms = _output_data_buf[i].end_ms;
+                                _output_data_buf_offset += 1;
+
                             }
+                            int[] segment_ms = new int[] { start_ms, end_ms };
+                            segment_batch.Add(segment_ms);
+
                         }
-                        else
+
+                    }
+
+                    if (segment_batch.Count > 0)
+                    {
+                        if (segments[batch_num] == null)
                         {
-                            if (!is_final && (!_output_data_buf[i].contain_seg_start_point || !_output_data_buf[i].contain_seg_end_point))
-                            {
-                                continue;
-                            }
-                            start_ms = _output_data_buf[i].start_ms;
-                            end_ms = _output_data_buf[i].end_ms;
-                            _output_data_buf_offset += 1;
+                            segments[batch_num] = new SegmentEntity();
                         }
-                        int[] segment_ms = new int[] { start_ms, end_ms };
-                        segment_batch.Add(segment_ms);
+                        segments[batch_num].Segment.AddRange(segment_batch);
                     }
                 }
-                if (segment_batch.Count > 0)
+
+                if (is_final)
                 {
-                    if (segments[batch_num] == null)
-                    {
-                        segments[batch_num] = new SegmentEntity();
-                    }
-                    segments[batch_num].Segment.AddRange(segment_batch);
+                    // reset class variables and clear the dict for the next query
+                    AllResetDetection();
                 }
             }
-            if (is_final)
-            {
-                // reset class variables and clear the dict for the next query
-                AllResetDetection();
+            catch (Exception ex) 
+            { 
+                //
             }
             return segments;
         }
@@ -479,7 +507,8 @@ namespace AliFsmnVad
                 frame_state = GetFrameState(_frm_cnt - 1 - i);
                 DetectOneFrame(frame_state, _frm_cnt - 1 - i, false);
             }
-            _idx_pre_chunk += _scores.GetLength(1) * _scores.GetLength(0); //_scores.shape[1];
+
+            _idx_pre_chunk += _scores.GetLength(1)* _scores.GetLength(0); //_scores.shape[1];
             return 0;
         }
 
@@ -503,12 +532,15 @@ namespace AliFsmnVad
                     {
                         DetectOneFrame(frame_state, _frm_cnt - 1, true);
                     }
+
+
                 }
             }
             catch (Exception e)
             {
                 //
             }
+
             return 0;
         }
 
@@ -535,7 +567,7 @@ namespace AliFsmnVad
             int frm_shift_in_ms = _vad_opts.frame_in_ms;
             if (AudioChangeState.kChangeStateSil2Speech == state_change)
             {
-                int silence_frame_count = _continous_silence_frame_count;
+                int silence_frame_count = _continous_silence_frame_count; // no used
                 _continous_silence_frame_count = 0;
                 _pre_end_silence_detected = false;
                 int start_frame = 0;
@@ -548,6 +580,7 @@ namespace AliFsmnVad
                     {
                         OnVoiceDetected(t);
                     }
+
                 }
                 else if (_vad_state_machine == (int)VadStateMachine.kVadInStateInSpeechSegment)
                 {
@@ -560,6 +593,7 @@ namespace AliFsmnVad
                         OnVoiceEnd(cur_frm_idx, false, false);
                         _vad_state_machine = (int)VadStateMachine.kVadInStateEndPointDetected;
                     }
+
                     else if (!is_final_frame)
                     {
                         OnVoiceDetected(cur_frm_idx);
@@ -568,6 +602,7 @@ namespace AliFsmnVad
                     {
                         MaybeOnVoiceEndIfLastFrame(is_final_frame, cur_frm_idx);
                     }
+
                 }
                 else
                 {
@@ -594,6 +629,7 @@ namespace AliFsmnVad
                     {
                         MaybeOnVoiceEndIfLastFrame(is_final_frame, cur_frm_idx);
                     }
+
                 }
                 else
                 {
@@ -624,6 +660,7 @@ namespace AliFsmnVad
                 {
                     return;
                 }
+
             }
             else if (AudioChangeState.kChangeStateSil2Sil == state_change)
             {
@@ -670,6 +707,7 @@ namespace AliFsmnVad
                         OnVoiceEnd(cur_frm_idx, false, false);
                         _vad_state_machine = (int)VadStateMachine.kVadInStateEndPointDetected;
                     }
+
                     else if (_vad_opts.do_extend != 0 && !is_final_frame)
                     {
                         if (_continous_silence_frame_count <= (int)(_vad_opts.lookahead_time_end_point / frm_shift_in_ms))
@@ -677,6 +715,7 @@ namespace AliFsmnVad
                             OnVoiceDetected(cur_frm_idx);
                         }
                     }
+
                     else
                     {
                         MaybeOnVoiceEndIfLastFrame(is_final_frame, cur_frm_idx);
@@ -686,12 +725,15 @@ namespace AliFsmnVad
                 {
                     return;
                 }
+
             }
+
             if (_vad_state_machine == (int)VadStateMachine.kVadInStateEndPointDetected && _vad_opts.detect_mode == (int)VadDetectMode.kVadMutipleUtteranceDetectMode)
             {
                 ResetDetection();
             }
+
         }
+
     }
 }
-
