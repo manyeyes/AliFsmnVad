@@ -25,20 +25,20 @@ namespace AliFsmnVad
 
     internal class WindowDetector
     {
-        private int _window_size_ms = 0;
-        private int _sil_to_speech_time = 0;
-        private int _speech_to_sil_time = 0;
-        private int _frame_size_ms = 0;
+        private int _window_size_ms = 0; //window_size_ms;
+        private int _sil_to_speech_time = 0; //sil_to_speech_time;
+        private int _speech_to_sil_time = 0; //speech_to_sil_time;
+        private int _frame_size_ms = 0; //frame_size_ms;
 
         private int _win_size_frame = 0;
         private int _win_sum = 0;
-        private int[] _win_state = new int[0];
+        private int[] _win_state = new int[0];// * _win_size_frame;  // 初始化窗
 
         private int _cur_win_pos = 0;
         private int _pre_frame_state = (int)FrameState.kFrameStateSil;
         private int _cur_frame_state = (int)FrameState.kFrameStateSil;
-        private int _sil_to_speech_frmcnt_thres = 0;
-        private int _speech_to_sil_frmcnt_thres = 0; 
+        private int _sil_to_speech_frmcnt_thres = 0; //int(sil_to_speech_time / frame_size_ms);
+        private int _speech_to_sil_frmcnt_thres = 0; //int(speech_to_sil_time / frame_size_ms);
 
         private int _voice_last_frame_count = 0;
         private int _noise_last_frame_count = 0;
@@ -58,7 +58,7 @@ namespace AliFsmnVad
 
             _win_size_frame = (int)(window_size_ms / frame_size_ms);
             _win_sum = 0;
-            _win_state = new int[_win_size_frame];
+            _win_state = new int[_win_size_frame];//[0] * _win_size_frame;  // 初始化窗
 
             _cur_win_pos = 0;
             _pre_frame_state = (int)FrameState.kFrameStateSil;
