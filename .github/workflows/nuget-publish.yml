@@ -1,8 +1,5 @@
 name: Build, Pack and Publish to NuGet
-run: dotnet build --configuration Release --no-restore
-  if: |
-    !(matrix.os != 'macos-latest' && 
-      (contains(matrix.targetframework, 'ios') || contains(matrix.targetframework, 'maccatalyst')))
+
 on:
   push:
     branches: [ master ]
