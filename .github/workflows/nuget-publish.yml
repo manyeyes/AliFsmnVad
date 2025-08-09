@@ -6,6 +6,7 @@ on:
     tags: [ 'v*' ]
   pull_request:
     branches: [ master ]
+  workflow_dispatch:  # 保留手动触发选项
 
 jobs:
   build:
@@ -13,15 +14,19 @@ jobs:
     strategy:
       matrix:
         os: [ windows-latest, ubuntu-latest, macos-latest ]
-        dotnet-version: [ '3.1.x', '6.0.x', '7.0.x', '8.0.x', '9.0.x' ]
+        # 只保留最高版本SDK（覆盖所有目标框架）
+        # .NET 9.0 SDK 可兼容 netstandard2.0~net9.0 及各平台框架
+        dotnet-version: [ '9.0.x' ]
 
     steps:
     - uses: actions/checkout@v4
 
-    - name: Setup .NET Core SDK ${{ matrix.dotnet-version }}
+    - name: Setup .NET SDK ${{ matrix.dotnet-version }}
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: ${{ matrix.dotnet-version }}
+        # 可选：安装所有需要的SDK版本（如果9.0仍有兼容问题）
+        # global-json-file: global.json
 
     - name: Restore dependencies
       run: dotnet restore
@@ -29,12 +34,12 @@ jobs:
     - name: Build
       run: dotnet build --configuration Release --no-restore
 
-    - name: Run tests
+    - name: Run tests (如果有测试项目)
       run: dotnet test --configuration Release --no-build --verbosity normal
 
     - name: Pack
       run: dotnet pack --configuration Release --no-build --output ./nupkg
 
     - name: Publish to NuGet
-      if: matrix.os == 'windows-latest' && matrix.dotnet-version == '8.0.x' && startsWith(github.ref, 'refs/tags/v')
+      if: matrix.os == 'windows-latest' && startsWith(github.ref, 'refs/tags/v')
       run: dotnet nuget push ./nupkg/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
