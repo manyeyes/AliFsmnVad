@@ -22,9 +22,9 @@ jobs:
             # dotnet-version: '9.0.x'
             target-frameworks: 'net9.0'
           - os: macos-latest
-            dotnet-version: '9.0.x'  # 使用最新稳定版SDK
+            # dotnet-version: '9.0.x'  # 使用最新稳定版SDK
             # 在macOS上只构建跨平台目标框架
-            target-frameworks: 'netstandard2.0;netstandard2.1;netcoreapp3.1;net6.0;net7.0;net8.0;net9.0'
+            target-frameworks: 'netstandard2.0;net6.0;net7.0;net8.0;net9.0'
             # 排除Windows和Android特定目标
             exclude-platform-specific: true
     steps:
