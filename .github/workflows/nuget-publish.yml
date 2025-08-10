@@ -20,7 +20,7 @@ jobs:
             target-frameworks: 'netstandard2.0;netstandard2.1;netcoreapp3.1;net6.0;net7.0;net8.0;net9.0;net8.0-windows10.0.19041.0;net8.0-android'
           - os: ubuntu-latest
             # dotnet-version: '9.0.x'
-            target-frameworks: 'netstandard2.0;netcoreapp3.1;net6.0;net7.0;net8.0;net9.0;net8.0-android'
+            target-frameworks: 'netstandard2.0;net8.0;net9.0;net8.0-android'
           - os: macos-latest
             # dotnet-version: '9.0.x'
             target-frameworks: 'netstandard2.0;netstandard2.1;netcoreapp3.1;net6.0;net7.0;net8.0;net9.0;net8.0-android;net8.0-ios;net8.0-maccatalyst'
