@@ -14,30 +14,30 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     
-    - name: Setup .NET 8
+    - name: Setup .NET 9
       uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: '8.0.x'
+        dotnet-version: '9.0.x'
         
     - name: Restore and Build (Linux)
       run: |
         dotnet restore AliFsmnVad/AliFsmnVad.csproj
-        dotnet build AliFsmnVad/AliFsmnVad.csproj -c Release -f net8.0
+        dotnet build AliFsmnVad/AliFsmnVad.csproj -c Release -f net9.0
         
     - name: Pack (Linux)
       run: |
         mkdir -p nupkg
-        dotnet pack AliFsmnVad/AliFsmnVad.csproj -c Release -f net8.0 -o ./nupkg
+        dotnet pack AliFsmnVad/AliFsmnVad.csproj -c Release -f net9.0 -o ./nupkg
 
   build_macos:
     runs-on: macos-latest
     steps:
     - uses: actions/checkout@v4
     
-    - name: Setup .NET 8
+    - name: Setup .NET 9
       uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: '8.0.x'
+        dotnet-version: '9.0.x'
         
     - name: Install iOS/MacCatalyst workloads
       run: |
@@ -46,26 +46,26 @@ jobs:
     - name: Restore and Build (Mac)
       run: |
         dotnet restore AliFsmnVad/AliFsmnVad.csproj
-        dotnet build AliFsmnVad/AliFsmnVad.csproj -c Release -f net8.0
-        dotnet build AliFsmnVad/AliFsmnVad.csproj -c Release -f net8.0-ios
-        dotnet build AliFsmnVad/AliFsmnVad.csproj -c Release -f net8.0-maccatalyst
+        dotnet build AliFsmnVad/AliFsmnVad.csproj -c Release -f net9.0
+        dotnet build AliFsmnVad/AliFsmnVad.csproj -c Release -f net9.0-ios
+        dotnet build AliFsmnVad/AliFsmnVad.csproj -c Release -f net9.0-maccatalyst
         
     - name: Pack (Mac)
       run: |
         mkdir -p nupkg
-        dotnet pack AliFsmnVad/AliFsmnVad.csproj -c Release -f net8.0 -o ./nupkg
-        dotnet pack AliFsmnVad/AliFsmnVad.csproj -c Release -f net8.0-ios -o ./nupkg
-        dotnet pack AliFsmnVad/AliFsmnVad.csproj -c Release -f net8.0-maccatalyst -o ./nupkg
+        dotnet pack AliFsmnVad/AliFsmnVad.csproj -c Release -f net9.0 -o ./nupkg
+        dotnet pack AliFsmnVad/AliFsmnVad.csproj -c Release -f net9.0-ios -o ./nupkg
+        dotnet pack AliFsmnVad/AliFsmnVad.csproj -c Release -f net9.0-maccatalyst -o ./nupkg
 
   build_windows_android:
     runs-on: windows-latest
     steps:
     - uses: actions/checkout@v4
     
-    - name: Setup .NET 8
+    - name: Setup .NET 9
       uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: '8.0.x'
+        dotnet-version: '9.0.x'
         
     - name: Install Android workload
       run: |
@@ -74,12 +74,12 @@ jobs:
     - name: Restore and Build (Android)
       run: |
         dotnet restore AliFsmnVad/AliFsmnVad.csproj
-        dotnet build AliFsmnVad/AliFsmnVad.csproj -c Release -f net8.0-android
+        dotnet build AliFsmnVad/AliFsmnVad.csproj -c Release -f net9.0-android
         
     - name: Pack (Android)
       run: |
         mkdir -p nupkg
-        dotnet pack AliFsmnVad/AliFsmnVad.csproj -c Release -f net8.0-android -o ./nupkg
+        dotnet pack AliFsmnVad/AliFsmnVad.csproj -c Release -f net9.0-android -o ./nupkg
 
   publish_nuget:
     needs: [build_linux, build_macos, build_windows_android]
