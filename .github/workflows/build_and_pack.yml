@@ -67,10 +67,10 @@ jobs:
         dotnet-version: '9.0.x'
     - name: Install Android workload
       run: dotnet workload install android
-    - name: Build
-      run: |
-        # 使用 MSBuild 的 ExcludeFromBuild 属性
-        dotnet build AliFsmnVad.sln -p:ExcludeFromBuild=true -p:ExcludedProjects="AliFsmnVad.Examples.csproj"
+    # - name: Build
+    #   run: |
+    #     # 使用 MSBuild 的 ExcludeFromBuild 属性
+    #     dotnet build AliFsmnVad.sln -p:ExcludeFromBuild=true -p:ExcludedProjects="AliFsmnVad.Examples.csproj"
     - name: Restore and Build (Android)
       run: |
         dotnet restore AliFsmnVad/AliFsmnVad.csproj
