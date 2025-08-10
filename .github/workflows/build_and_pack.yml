@@ -1,0 +1,96 @@
+name: Build and Pack AliFsmnVad
+
+on:
+  push:
+    branches: [ master ]
+    tags: [ 'v*' ]
+  pull_request:
+    branches: [ master ]
+  workflow_dispatch:
+
+jobs:
+  build_linux:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup .NET 8
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'
+        
+    - name: Restore and Build (Linux)
+      run: |
+        dotnet restore AliFsmnVad/AliFsmnVad.csproj
+        dotnet build AliFsmnVad/AliFsmnVad.csproj -c Release -f net8.0
+        
+    - name: Pack (Linux)
+      run: |
+        mkdir -p nupkg
+        dotnet pack AliFsmnVad/AliFsmnVad.csproj -c Release -f net8.0 -o ./nupkg
+
+  build_macos:
+    runs-on: macos-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup .NET 8
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'
+        
+    - name: Install iOS/MacCatalyst workloads
+      run: |
+        dotnet workload install ios maccatalyst
+        
+    - name: Restore and Build (Mac)
+      run: |
+        dotnet restore AliFsmnVad/AliFsmnVad.csproj
+        dotnet build AliFsmnVad/AliFsmnVad.csproj -c Release -f net8.0
+        dotnet build AliFsmnVad/AliFsmnVad.csproj -c Release -f net8.0-ios
+        dotnet build AliFsmnVad/AliFsmnVad.csproj -c Release -f net8.0-maccatalyst
+        
+    - name: Pack (Mac)
+      run: |
+        mkdir -p nupkg
+        dotnet pack AliFsmnVad/AliFsmnVad.csproj -c Release -f net8.0 -o ./nupkg
+        dotnet pack AliFsmnVad/AliFsmnVad.csproj -c Release -f net8.0-ios -o ./nupkg
+        dotnet pack AliFsmnVad/AliFsmnVad.csproj -c Release -f net8.0-maccatalyst -o ./nupkg
+
+  build_windows_android:
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup .NET 8
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'
+        
+    - name: Install Android workload
+      run: |
+        dotnet workload install android
+        
+    - name: Restore and Build (Android)
+      run: |
+        dotnet restore AliFsmnVad/AliFsmnVad.csproj
+        dotnet build AliFsmnVad/AliFsmnVad.csproj -c Release -f net8.0-android
+        
+    - name: Pack (Android)
+      run: |
+        mkdir -p nupkg
+        dotnet pack AliFsmnVad/AliFsmnVad.csproj -c Release -f net8.0-android -o ./nupkg
+
+  publish_nuget:
+    needs: [build_linux, build_macos, build_windows_android]
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+    steps:
+    - uses: actions/download-artifact@v3
+      with:
+        name: nupkg
+        path: ./nupkg
+        
+    # - name: Publish to NuGet
+    #   run: |
+    #     dotnet nuget push ./nupkg/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
