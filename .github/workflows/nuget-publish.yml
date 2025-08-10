@@ -16,22 +16,32 @@ jobs:
         # 为不同操作系统定义支持的目标框架
         include:
           - os: windows-latest
-            dotnet-version: '9.0.x'
+            # dotnet-version: '9.0.x'
             target-frameworks: 'netstandard2.0;netstandard2.1;netcoreapp3.1;net6.0;net7.0;net8.0;net9.0;net8.0-windows10.0.19041.0;net8.0-android'
           - os: ubuntu-latest
-            dotnet-version: '9.0.x'
-            target-frameworks: 'netstandard2.0;net6.0;net7.0;net8.0;net9.0;net8.0-android'
+            # dotnet-version: '9.0.x'
+            target-frameworks: 'netstandard2.0;netstandard2.1;netcoreapp3.1;net6.0;net7.0;net8.0;net9.0;net8.0-android'
           - os: macos-latest
-            dotnet-version: '9.0.x'
+            # dotnet-version: '9.0.x'
             target-frameworks: 'netstandard2.0;netstandard2.1;netcoreapp3.1;net6.0;net7.0;net8.0;net9.0;net8.0-android;net8.0-ios;net8.0-maccatalyst'
 
     steps:
     - uses: actions/checkout@v4
 
-    - name: Setup .NET SDK ${{ matrix.dotnet-version }}
+    # - name: Setup .NET SDK ${{ matrix.dotnet-version }}
+    #   uses: actions/setup-dotnet@v4
+    #   with:
+    #     dotnet-version: ${{ matrix.dotnet-version }}
+
+    - name: Setup .NET SDKs
       uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: ${{ matrix.dotnet-version }}
+        dotnet-version: |
+          3.1.x
+          6.0.x
+          7.0.x
+          8.0.x
+          9.0.x
       
     # 还原当前系统所需的工作负载（仅在需要时）
     - name: Restore .NET workloads
