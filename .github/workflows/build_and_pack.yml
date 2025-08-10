@@ -61,25 +61,29 @@ jobs:
     runs-on: windows-latest
     steps:
     - uses: actions/checkout@v4
-    
     - name: Setup .NET 9
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: '9.0.x'
-        
     - name: Install Android workload
+      run: dotnet workload install android
+    - name: Build
       run: |
-        dotnet workload install android
-        
+        # 使用 MSBuild 的 ExcludeFromBuild 属性
+        dotnet build AliFsmnVad.sln -p:ExcludeFromBuild=true -p:ExcludedProjects="AliFsmnVad.Examples.csproj"
     - name: Restore and Build (Android)
       run: |
         dotnet restore AliFsmnVad/AliFsmnVad.csproj
         dotnet build AliFsmnVad/AliFsmnVad.csproj -c Release -f net9.0-android
-        
     - name: Pack (Android)
       run: |
         mkdir -p nupkg
         dotnet pack AliFsmnVad/AliFsmnVad.csproj -c Release -f net9.0-android -o ./nupkg
+    - name: Upload Android Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: android-nupkg
+        path: ./nupkg/*.nupkg
     
   publish_nuget:
     needs: [build_linux, build_macos, build_windows_android]
