@@ -49,14 +49,20 @@ jobs:
       if: contains(matrix.target-frameworks, 'android') || contains(matrix.target-frameworks, 'ios') || contains(matrix.target-frameworks, 'maccatalyst')
 
     - name: Restore dependencies
-      run: dotnet restore src/AliFsmnVad/AliFsmnVad.csproj -p:TargetFrameworks=${{ matrix.target-frameworks }}
+      run: dotnet restore AliFsmnVad/AliFsmnVad.csproj -p:TargetFrameworks=${{ matrix.target-frameworks }}
 
     - name: Build
-      run: dotnet build src/AliFsmnVad/AliFsmnVad.csproj --configuration Release --no-restore -f ${{ matrix.target-frameworks }}
+      run: dotnet build AliFsmnVad/AliFsmnVad.csproj --configuration Release --no-restore -f ${{ matrix.target-frameworks }}
 
     - name: Pack
-      run: dotnet pack src/AliFsmnVad/AliFsmnVad.csproj --configuration Release --no-build --output ./nupkg/AliFsmnVad -f ${{ matrix.target-frameworks }}
+      run: dotnet pack AliFsmnVad/AliFsmnVad.csproj --configuration Release --no-build --output ./nupkg/AliFsmnVad -f ${{ matrix.target-frameworks }}
 
     - name: Publish to NuGet
       if: matrix.os == 'windows-latest' && startsWith(github.ref, 'refs/tags/v')
       run: dotnet nuget push ./nupkg/AliFsmnVad/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
+
+    - name: Cleanup on failure
+      if: failure()
+      run: |
+        git tag -d ${{ steps.version.outputs.new_version }} || true
+        git push origin :refs/tags/${{ steps.version.outputs.new_version }} || true
