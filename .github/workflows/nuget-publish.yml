@@ -39,7 +39,7 @@ jobs:
       if: contains(matrix.target-frameworks, 'android') || contains(matrix.target-frameworks, 'ios') || contains(matrix.target-frameworks, 'maccatalyst')
 
     - name: Restore dependencies
-      run: dotnet restore -p:TargetFrameworks=${{ matrix.target-frameworks }}
+      run: dotnet restore -p:TargetFrameworks="${{ matrix.target-frameworks }}"
 
     - name: Build
       run: dotnet build --configuration Release --no-restore -f ${{ matrix.target-frameworks }}
