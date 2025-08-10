@@ -80,14 +80,6 @@ jobs:
       run: |
         mkdir -p nupkg
         dotnet pack AliFsmnVad/AliFsmnVad.csproj -c Release -f net9.0-android -o ./nupkg
-
-    # 新增：上传打包后的文件作为 Artifacts
-    - name: Upload packed files
-      uses: actions/upload-artifact@v4
-      with:
-        name: nuget-packages  # Artifacts 名称（自定义）
-        path: ./nupkg/AliFsmnVad  # 指向 pack 输出的目录（与 pack 步骤的 --output 一致）
-        retention-days: 7  # 保留 7 天（可选，默认 90 天）
     
   publish_nuget:
     needs: [build_linux, build_macos, build_windows_android]
@@ -102,3 +94,10 @@ jobs:
     - name: Publish to NuGet
       run: |
         dotnet nuget push ./nupkg/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
+    # 新增：上传打包后的文件作为 Artifacts
+    - name: Upload packed files
+      uses: actions/upload-artifact@v4
+      with:
+        name: nuget-packages  # Artifacts 名称（自定义）
+        path: ./nupkg/AliFsmnVad  # 指向 pack 输出的目录（与 pack 步骤的 --output 一致）
+        retention-days: 7  # 保留 7 天（可选，默认 90 天）
