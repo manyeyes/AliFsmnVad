@@ -66,7 +66,7 @@ jobs:
     # 还原依赖（包含运行时和平台特定依赖）
     - name: Restore dependencies
       run: dotnet restore AliFsmnVad/AliFsmnVad.csproj 
-        -p:TargetFrameworks='${{ matrix.target-frameworks }}' 
+        -p:TargetFrameworks="${{ matrix.target-frameworks }}"
         -p:RuntimeIdentifier=${{ matrix.runtime }}
         ${{ matrix.ios-version != '' && format('-p:IOSVersion={0}', matrix.ios-version) || '' }}  # 传递iOS版本（如果指定）
 
