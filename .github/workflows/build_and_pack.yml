@@ -1,102 +1,151 @@
-name: Multi-target Build and Pack
+name: CI
 
 on:
   push:
-    branches: [ master ]
-    tags: [ 'v*' ]
+    branches: [master, release-*]
+    tags:
+      - '[0-9]+.[0-9]+.[0-9]+'
+      - '[0-9]+.[0-9]+.[0-9]+-*'
+  pull_request:
   workflow_dispatch:
 
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+
 jobs:
-  build_and_pack:
+  build:
+    name: Build / ${{ matrix.os }} / ${{ matrix.tfm }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
+        os: [ubuntu-22.04, windows-2022, macos-14]
+        tfm: ['netstandard2.0', 'netstandard2.1', 'net6.0', 'net7.0', 'net8.0', 'net9.0']
         include:
-          # Linux 构建
-          - os: ubuntu-latest
-            target_framework: netstandard2.0
-            dotnet_version: 6.0.x
-          - os: ubuntu-latest
-            target_framework: netstandard2.1
-            dotnet_version: 7.0.x
-          - os: ubuntu-latest
-            target_framework: net6.0
-            dotnet_version: 6.0.x
-          - os: ubuntu-latest
-            target_framework: net7.0
-            dotnet_version: 7.0.x
-          - os: ubuntu-latest
-            target_framework: net8.0
-            dotnet_version: 8.0.x
-          - os: ubuntu-latest
-            target_framework: net9.0
-            dotnet_version: 9.0.x
-            
-          # Windows 构建 (包含 netcoreapp3.1 和 Windows 特定目标)
-          - os: windows-latest
-            target_framework: netcoreapp3.1
-            dotnet_version: 3.1.x
-          - os: windows-latest
-            target_framework: net8.0-windows10.0.19041.0
-            dotnet_version: 8.0.x
-            
-          # macOS 构建 Android
-          - os: macos-latest
-            target_framework: net8.0-android
-            dotnet_version: 8.0.x
+          - os: windows-2022
+            tfm: 'netcoreapp3.1'
+          - os: windows-2022
+            tfm: 'net8.0-windows10.0.19041.0'
+          - os: macos-14
+            tfm: 'net8.0-android'
             install_workload: true
+        exclude:
+          - os: ubuntu-22.04
+            tfm: 'netcoreapp3.1'
+      fail-fast: false
 
     steps:
-    - uses: actions/checkout@v4
-    
-    # 特殊处理 Ubuntu 的 OpenSSL 问题
-    - name: Install OpenSSL (Linux only)
-      if: runner.os == 'Linux' && matrix.target_framework == 'netcoreapp3.1'
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y libssl1.0-dev
-        
-    - name: Setup .NET SDK
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: ${{ matrix.dotnet_version }}
-        
-    - name: Install Android workload (if needed)
-      if: matrix.install_workload == true
-      run: dotnet workload install android
-        
-    - name: Restore dependencies
-      run: dotnet restore AliFsmnVad/AliFsmnVad.csproj -p:TargetFramework=${{ matrix.target_framework }}
-      
-    - name: Build
-      run: dotnet build AliFsmnVad/AliFsmnVad.csproj -c Release --no-restore -p:TargetFramework=${{ matrix.target_framework }}
-      
-    - name: Pack
-      run: |
-        mkdir -p nupkg
-        dotnet pack AliFsmnVad/AliFsmnVad.csproj -c Release --no-build -o ./nupkg -p:TargetFramework=${{ matrix.target_framework }}
-        
-    - name: Upload Artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: nupkg-${{ matrix.target_framework }}
-        path: ./nupkg/*.nupkg
+      - name: Checkout
+        uses: actions/checkout@v4.1.2
+        with:
+          fetch-depth: 0
 
-  publish_nuget:
-    needs: build_and_pack
-    runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/v')
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4.0.0
+        with:
+          dotnet-version: |
+            9.0.x
+            8.0.x
+            7.0.x
+            6.0.x
+            3.1.x
+
+      - name: Install Android workload
+        if: matrix.install_workload == true
+        run: dotnet workload install android
+
+      - name: Restore
+        run: dotnet restore AliFsmnVad/AliFsmnVad.csproj -p:TargetFramework=${{ matrix.tfm }}
+
+      - name: Build
+        run: dotnet build AliFsmnVad/AliFsmnVad.csproj --configuration Release --no-restore -p:TargetFramework=${{ matrix.tfm }}
+
+      - name: Pack
+        run: |
+          mkdir -p artifacts/package
+          dotnet pack AliFsmnVad/AliFsmnVad.csproj --configuration Release --no-build -o artifacts/package -p:TargetFramework=${{ matrix.tfm }}
+
+      - name: Upload packages
+        uses: actions/upload-artifact@v4.3.1
+        with:
+          name: NuGet-packages-${{ matrix.os }}-${{ matrix.tfm }}
+          path: artifacts/package/*.nupkg
+          retention-days: 7
+
+  test:
+    name: Test / ${{ matrix.os }} / ${{ matrix.arch }} / ${{ matrix.tfm }}
+    runs-on: ${{ matrix.os }}
+    needs: build
+    strategy:
+      matrix:
+        arch: [x64]
+        os: [windows-2022, macos-14, ubuntu-22.04]
+        tfm: ['net6.0', 'net7.0', 'net8.0', 'net9.0']
+        include:
+          - arch: arm64
+            os: macos-14
+            tfm: 'net8.0'
+          - arch: arm64
+            os: macos-14
+            tfm: 'net9.0'
+      fail-fast: false
+
     steps:
-    - name: Download all artifacts
-      uses: actions/download-artifact@v4
-      with:
-        path: ./merged-nupkg
-        pattern: 'nupkg-*/*'
-        merge-multiple: true
-        
-    - name: Publish to NuGet
-      run: |
-        dotnet nuget push ./merged-nupkg/*.nupkg \
-          --api-key ${{ secrets.NUGET_API_KEY }} \
-          --source https://api.nuget.org/v3/index.json \
-          --skip-duplicate
+      - name: Checkout
+        uses: actions/checkout@v4.1.2
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4.0.0
+        with:
+          dotnet-version: |
+            9.0.x
+            8.0.x
+            7.0.x
+            6.0.x
+
+      - name: Run tests
+        run: dotnet test AliFsmnVad.Tests/AliFsmnVad.Tests.csproj --configuration Release --framework ${{ matrix.tfm }} --logger "GitHubActions"
+
+  test-linux-distros:
+    name: Test / ${{ matrix.distro }} / ${{ matrix.tfm }}
+    runs-on: ubuntu-22.04
+    needs: build
+    strategy:
+      matrix:
+        distro: [alpine.3.20, centos.stream.9, debian.12, fedora.40, ubuntu.20.04, ubuntu.22.04, ubuntu.24.04]
+        tfm: ['net8.0', 'net9.0']
+      fail-fast: false
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4.1.2
+        with:
+          fetch-depth: 0
+
+      - name: Run tests in container
+        run: |
+          git_command="git config --global --add safe.directory /app"
+          test_command="dotnet test AliFsmnVad.Tests/AliFsmnVad.Tests.csproj --configuration Release -p:TargetFrameworks=${{ matrix.tfm }} --logger GitHubActions"
+          docker run -t --rm -v "$PWD:/app" -e OPENSSL_ENABLE_SHA1_SIGNATURES=1 gittools/build-images:${{ matrix.distro }}-sdk-${matrix.tfm:3:1}.0 sh -c "$git_command && $test_command"
+
+  publish:
+    name: Publish to NuGet
+    runs-on: ubuntu-22.04
+    needs: [build, test, test-linux-distros]
+    if: startsWith(github.ref, 'refs/tags/')
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: ./merged-packages
+          pattern: 'NuGet-packages-*/*'
+          merge-multiple: true
+
+      - name: Publish to NuGet
+        run: |
+          dotnet nuget push ./merged-packages/*.nupkg \
+            --api-key ${{ secrets.NUGET_API_KEY }} \
+            --source https://api.nuget.org/v3/index.json \
+            --skip-duplicate
