@@ -28,6 +28,12 @@ jobs:
       run: |
         mkdir -p nupkg
         dotnet pack AliFsmnVad/AliFsmnVad.csproj -c Release -f net9.0 -o ./nupkg
+        
+    - name: Upload Linux Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: linux-nupkg
+        path: ./nupkg/*.nupkg
 
   build_macos:
     runs-on: macos-latest
@@ -56,52 +62,53 @@ jobs:
         dotnet pack AliFsmnVad/AliFsmnVad.csproj -c Release -f net9.0 -o ./nupkg
         dotnet pack AliFsmnVad/AliFsmnVad.csproj -c Release -f net9.0-ios -o ./nupkg
         dotnet pack AliFsmnVad/AliFsmnVad.csproj -c Release -f net9.0-maccatalyst -o ./nupkg
-
-  build_windows_android:
-    runs-on: windows-latest
-    steps:
-    - uses: actions/checkout@v4
-    - name: Setup .NET 9
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: '9.0.x'
-    - name: Install Android workload
-      run: dotnet workload install android
-    # - name: Build
-    #   run: |
-    #     # 使用 MSBuild 的 ExcludeFromBuild 属性
-    #     dotnet build AliFsmnVad.sln -p:ExcludeFromBuild=true -p:ExcludedProjects="AliFsmnVad.Examples.csproj"
-    - name: Restore and Build (Android)
-      run: |
-        dotnet restore AliFsmnVad/AliFsmnVad.csproj
-        dotnet build AliFsmnVad/AliFsmnVad.csproj -c Release -f net9.0-android -p:ExcludeFromBuild=true -p:ExcludedProjects="AliFsmnVad.Examples.csproj"
-    - name: Pack (Android)
-      run: |
-        mkdir -p nupkg
-        dotnet pack AliFsmnVad/AliFsmnVad.csproj -c Release -f net9.0-android -o ./nupkg
-    - name: Upload Android Artifact
+        
+    - name: Upload Mac Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: android-nupkg
+        name: mac-nupkg
         path: ./nupkg/*.nupkg
-    
+
+  # 注意：已注释的 Android 部分如果取消注释需要确保 jobs.publish_nuget.needs 也取消对应依赖
+  # build_windows_android:
+  #   runs-on: windows-latest
+  #   steps:
+  #   - uses: actions/checkout@v4
+  #   - name: Setup .NET 9
+  #     uses: actions/setup-dotnet@v4
+  #     with:
+  #       dotnet-version: '9.0.x'
+  #   - name: Install Android workload
+  #     run: dotnet workload install android
+  #   - name: Restore and Build (Android)
+  #     run: |
+  #       dotnet restore AliFsmnVad/AliFsmnVad.csproj
+  #       dotnet build AliFsmnVad/AliFsmnVad.csproj -c Release -f net9.0-android
+  #   - name: Pack (Android)
+  #     run: |
+  #       mkdir -p nupkg
+  #       dotnet pack AliFsmnVad/AliFsmnVad.csproj -c Release -f net9.0-android -o ./nupkg
+  #   - name: Upload Android Artifact
+  #     uses: actions/upload-artifact@v4
+  #     with:
+  #       name: android-nupkg
+  #       path: ./nupkg/*.nupkg
+
   publish_nuget:
-    needs: [build_linux, build_macos, build_windows_android]
+    needs: [build_linux, build_macos]  # 如果启用 Android 需要添加 build_windows_android
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/v')
     steps:
-    - uses: actions/download-artifact@v3
+    - name: Download Artifacts
+      uses: actions/download-artifact@v4
       with:
-        name: nupkg
-        path: ./nupkg
+        path: ./merged-nupkg
+        pattern: '*-nupkg/*'
+        merge-multiple: true
         
     - name: Publish to NuGet
       run: |
-        dotnet nuget push ./nupkg/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
-    # 新增：上传打包后的文件作为 Artifacts
-    - name: Upload packed files
-      uses: actions/upload-artifact@v4
-      with:
-        name: nuget-packages  # Artifacts 名称（自定义）
-        path: ./nupkg/AliFsmnVad  # 指向 pack 输出的目录（与 pack 步骤的 --output 一致）
-        retention-days: 7  # 保留 7 天（可选，默认 90 天）
+        dotnet nuget push ./merged-nupkg/*.nupkg \
+          --api-key ${{ secrets.NUGET_API_KEY }} \
+          --source https://api.nuget.org/v3/index.json \
+          --skip-duplicate
