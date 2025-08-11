@@ -54,7 +54,7 @@ jobs:
       run: dotnet restore AliFsmnVad/AliFsmnVad.csproj -p:TargetFrameworks='${{ matrix.target-frameworks }}'
 
     - name: Build
-      run: dotnet build AliFsmnVad/AliFsmnVad.csproj --configuration Release --no-restore -f ${{ matrix.target-frameworks }} AliFsmnVad/AliFsmnVad.csproj
+      run: dotnet build AliFsmnVad/AliFsmnVad.csproj --configuration Release --no-restore -f ${{ matrix.target-frameworks }}
       # run: dotnet build AliFsmnVad.sln -p:ExcludeFromBuild=true -p:ExcludedProjects="AliFsmnVad.Examples.csproj" --configuration Release --no-restore -f ${{ matrix.target-frameworks }} AliFsmnVad/AliFsmnVad.csproj
     
     - name: Pack
