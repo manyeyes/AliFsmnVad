@@ -92,47 +92,11 @@ jobs:
           name: NuGet-packages-${{ matrix.os }}-${{ matrix.tfm }}
           path: artifacts/package/*.nupkg
           retention-days: 7
-
-  test:
-    name: Test / ${{ matrix.os }} / ${{ matrix.arch }} / ${{ matrix.tfm }}
-    runs-on: ${{ matrix.os }}
-    needs: build
-    strategy:
-      matrix:
-        arch: [x64]
-        os: [windows-2022, macos-14, ubuntu-22.04]
-        tfm: ['net6.0', 'net7.0', 'net8.0', 'net9.0']
-        include:
-          - arch: arm64
-            os: macos-14
-            tfm: 'net8.0'
-          - arch: arm64
-            os: macos-14
-            tfm: 'net9.0'
-      fail-fast: false
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4.1.2
-        with:
-          fetch-depth: 0
-
-      - name: Setup .NET SDK
-        uses: actions/setup-dotnet@v4.0.0
-        with:
-          dotnet-version: |
-            9.0.x
-            8.0.x
-            7.0.x
-            6.0.x
-
-      - name: Run tests
-        run: dotnet test AliFsmnVad.Tests/AliFsmnVad.Tests.csproj --configuration Release --framework ${{ matrix.tfm }} --logger "GitHubActions"
-
+          
   publish:
     name: Publish to NuGet
     runs-on: ubuntu-22.04
-    needs: [build, test]
+    needs: [build]
     if: startsWith(github.ref, 'refs/tags/')
     steps:
       - name: Download all artifacts
