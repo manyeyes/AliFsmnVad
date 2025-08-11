@@ -74,7 +74,7 @@ jobs:
     - name: Restore and Build (Android)
       run: |
         dotnet restore AliFsmnVad/AliFsmnVad.csproj
-        dotnet build AliFsmnVad/AliFsmnVad.csproj -c Release -f net9.0-android
+        dotnet build AliFsmnVad/AliFsmnVad.csproj -c Release -f net9.0-android -p:ExcludeFromBuild=true -p:ExcludedProjects="AliFsmnVad.Examples.csproj"
     - name: Pack (Android)
       run: |
         mkdir -p nupkg
