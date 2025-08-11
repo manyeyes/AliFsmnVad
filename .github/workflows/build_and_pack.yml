@@ -67,7 +67,7 @@ jobs:
     - name: Upload NuGet packages
       uses: actions/upload-artifact@v4
       with:
-        name: manyspeech-nupkg  # Artifact 名称（自定义，便于识别）
+        name: manyspeech-nupkg-${{ matrix.os }}  # Artifact 名称（自定义，便于识别）
         path: ./nupkg/AliFsmnVad/*.nupkg  # 打包文件的路径（匹配所有 .nupkg 文件）
         retention-days: 30  # 产物保留天数（可选，默认 90 天）
         
