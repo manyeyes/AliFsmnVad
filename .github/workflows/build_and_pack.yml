@@ -1,130 +1,71 @@
-name: CI Pipeline
+name: Build, Pack and Publish to NuGet
 
 on:
   push:
-    branches: [master]
-    tags: ['v*']
+    branches: [ master ]
+    tags: [ 'v*' ]
   pull_request:
-    branches: [master]
+    branches: [ master ]
   workflow_dispatch:
-
-env:
-  DOTNET_NOLOGO: true
-  DOTNET_CLI_TELEMETRY_OPTOUT: true
 
 jobs:
   build:
-    name: Build (${{ matrix.os }} - ${{ matrix.tfm }})
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
+        # 为不同操作系统定义支持的目标框架
         include:
-          # Linux 构建
-          - os: ubuntu-22.04
-            tfm: netstandard2.0
-            dotnet: 6.0.x
-          - os: ubuntu-22.04
-            tfm: netstandard2.1
-            dotnet: 7.0.x
-          - os: ubuntu-22.04
-            tfm: net6.0
-            dotnet: 6.0.x
-          - os: ubuntu-22.04
-            tfm: net7.0
-            dotnet: 7.0.x
-          - os: ubuntu-22.04
-            tfm: net8.0
-            dotnet: 8.0.x
-          - os: ubuntu-22.04
-            tfm: net9.0
-            dotnet: 9.0.x
-
-          # Windows 构建
-          - os: windows-2022
-            tfm: netcoreapp3.1
-            dotnet: 3.1.x
-          - os: windows-2022
-            tfm: net8.0-windows10.0.19041.0
-            dotnet: 8.0.x
-
-          # macOS 构建
-          - os: macos-13
-            tfm: net8.0-android
-            dotnet: 8.0.x
-            workload: android
-          - os: macos-13
-            tfm: net9.0-ios
-            dotnet: 9.0.x
-            workload: ios
-          - os: macos-13
-            tfm: net9.0-maccatalyst
-            dotnet: 9.0.x
-            workload: maccatalyst
-      fail-fast: false
-
+          # - os: windows-latest
+          #   # dotnet-version: '9.0.x'
+          #   target-frameworks: 'netstandard2.0;netstandard2.1;netcoreapp3.1;net6.0;net7.0;net8.0;net9.0;net8.0-windows10.0.19041.0;net8.0-android'
+          - os: ubuntu-latest
+            # dotnet-version: '9.0.x'
+            target-frameworks: 'net9.0'
+          - os: macos-latest
+            # dotnet-version: '9.0.x'  # 使用最新稳定版SDK
+            # 在macOS上只构建跨平台目标框架
+            target-frameworks: 'net9.0'
+            # 排除Windows和Android特定目标
+            # exclude-platform-specific: true
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4.1.2
-        with:
-          fetch-depth: 0
+    - uses: actions/checkout@v4
 
-      - name: Setup .NET SDK
-        uses: actions/setup-dotnet@v4.0.0
-        with:
-          dotnet-version: ${{ matrix.dotnet }}
+    # - name: Setup .NET SDK ${{ matrix.dotnet-version }}
+    #   uses: actions/setup-dotnet@v4
+    #   with:
+    #     dotnet-version: ${{ matrix.dotnet-version }}
 
-      - name: Install workloads
-        if: matrix.workload
-        run: |
-          echo "Installing ${{ matrix.workload }} workload..."
-          dotnet workload install ${{ matrix.workload }} --skip-manifest-update
-          if [[ "${{ matrix.workload }}" =~ (ios|maccatalyst) ]]; then
-            dotnet workload install wasm-tools --skip-manifest-update
-          fi
+    - name: Setup .NET SDKs
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: |
+          3.1.x
+          6.0.x
+          7.0.x
+          8.0.x
+          9.0.x
+      
+    # 还原当前系统所需的工作负载（仅在需要时）
+    - name: Restore .NET workloads
+      run: dotnet workload restore
+      if: contains(matrix.target-frameworks, 'android') || contains(matrix.target-frameworks, 'ios') || contains(matrix.target-frameworks, 'maccatalyst')
 
-      - name: Clean project
-        run: dotnet clean AliFsmnVad/AliFsmnVad.csproj -c Release
+    - name: Restore dependencies
+      run: dotnet restore AliFsmnVad/AliFsmnVad.csproj -p:TargetFrameworks='${{ matrix.target-frameworks }}'
 
-      - name: Restore dependencies
-        run: |
-          # 强制清除NuGet缓存
-          dotnet nuget locals all --clear
-          dotnet restore AliFsmnVad/AliFsmnVad.csproj -p:TargetFramework=${{ matrix.tfm }}
+    - name: Build
+      run: dotnet build AliFsmnVad/AliFsmnVad.csproj --configuration Release --no-restore -f ${{ matrix.target-frameworks }} AliFsmnVad/AliFsmnVad.csproj
+      # run: dotnet build AliFsmnVad.sln -p:ExcludeFromBuild=true -p:ExcludedProjects="AliFsmnVad.Examples.csproj" --configuration Release --no-restore -f ${{ matrix.target-frameworks }} AliFsmnVad/AliFsmnVad.csproj
+    
+    - name: Pack
+      run: dotnet pack AliFsmnVad/AliFsmnVad.csproj --configuration Release --no-build --output ./nupkg/AliFsmnVad -p:TargetFrameworks='${{ matrix.target-frameworks }}' AliFsmnVad/AliFsmnVad.csproj
 
-      - name: Build project
-        run: dotnet build AliFsmnVad/AliFsmnVad.csproj -c Release -p:TargetFramework=${{ matrix.tfm }} --no-restore
+    - name: Publish to NuGet
+      if: matrix.os == 'windows-latest' && startsWith(github.ref, 'refs/tags/v')
+      run: dotnet nuget push ./nupkg/AliFsmnVad/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
 
-      - name: Create package directory
-        run: mkdir -p artifacts/packages
-
-      - name: Pack project
-        run: dotnet pack AliFsmnVad/AliFsmnVad.csproj -c Release -o artifacts/packages -p:TargetFramework=${{ matrix.tfm }} --no-build
-
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v4.3.1
-        with:
-          name: packages-${{ matrix.os }}-${{ matrix.tfm }}
-          path: artifacts/packages/*.nupkg
-          retention-days: 3
-
-  publish:
-    name: Publish to NuGet
-    needs: build
-    if: startsWith(github.ref, 'refs/tags/v')
-    runs-on: ubuntu-22.04
-    steps:
-      - name: Download artifacts
-        uses: actions/download-artifact@v4
-        with:
-          path: artifacts/packages
-          pattern: 'packages-*/*'
-          merge-multiple: true
-
-      - name: Publish packages
-        run: |
-          for pkg in artifacts/packages/*.nupkg; do
-            dotnet nuget push "$pkg" \
-              --api-key ${{ secrets.NUGET_API_KEY }} \
-              --source https://api.nuget.org/v3/index.json \
-              --skip-duplicate
-          done
+    - name: Cleanup on failure
+      if: failure()
+      run: |
+        git tag -d ${{ steps.version.outputs.new_version }} || true
+        git push origin :refs/tags/${{ steps.version.outputs.new_version }} || true
