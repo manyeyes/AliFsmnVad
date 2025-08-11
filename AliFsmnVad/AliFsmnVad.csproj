@@ -1,12 +1,20 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 		<PropertyGroup>
-				<!--<TargetFrameworks>netstandard2.0;netstandard2.1;netcoreapp3.1;net6.0;net7.0;net8.0;net9.0;net8.0-android;net8.0-ios;net8.0-maccatalyst</TargetFrameworks>
-			<TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('windows'))">$(TargetFrameworks);net8.0-windows10.0.19041.0</TargetFrameworks>-->
-				<TargetFrameworks>net9.0;net9.0-android;net9.0-ios;net9.0-maccatalyst</TargetFrameworks>
-				<SupportedOSPlatformVersion Condition="'$(TargetFramework)' == 'net9.0-ios'">14.2</SupportedOSPlatformVersion>
-				<SupportedOSPlatformVersion Condition="'$(TargetFramework)' == 'net9.0-maccatalyst'">14.0</SupportedOSPlatformVersion>
-				<SupportedOSPlatformVersion Condition="'$(TargetFramework)' == 'net9.0-android'">21.0</SupportedOSPlatformVersion>
+				<TargetFrameworks>
+						netstandard2.0;netstandard2.1;
+						net6.0;net7.0;net8.0;net9.0;
+						net8.0-windows10.0.19041.0;
+						net8.0-android;
+						net9.0-ios;
+						net9.0-maccatalyst
+				</TargetFrameworks>
+
+				<!-- 平台最低版本要求 -->
+				<SupportedOSPlatformVersion Condition="$(TargetFramework.Contains('-windows'))">10.0.19041.0</SupportedOSPlatformVersion>
+				<SupportedOSPlatformVersion Condition="$(TargetFramework.Contains('-android'))">21.0</SupportedOSPlatformVersion>
+				<SupportedOSPlatformVersion Condition="$(TargetFramework.Contains('-ios'))">14.2</SupportedOSPlatformVersion>
+				<SupportedOSPlatformVersion Condition="$(TargetFramework.Contains('-maccatalyst'))">15.0</SupportedOSPlatformVersion>
 				<ImplicitUsings>enable</ImplicitUsings>
 				<LangVersion>10.0</LangVersion>
 				<Nullable>enable</Nullable>
@@ -30,7 +38,7 @@
 				<PackageReference Include="ManySpeech.SpeechFeatures" Version="1.1.6" />
 				<PackageReference Include="Microsoft.Extensions.Logging" Version="9.0.7" />
 				<PackageReference Include="Microsoft.ML.OnnxRuntime" Version="1.22.1" />
-				<PackageReference Include="YamlDotNet" Version="16.3.0" />
+				<PackageReference Include="YamlDotNet" Version="16.3.0" />				
 		</ItemGroup>
 
 </Project>
