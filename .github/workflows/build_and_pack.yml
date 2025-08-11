@@ -24,10 +24,10 @@ jobs:
           
           # macOS 架构（Intel和Apple Silicon）
           - os: macos-latest
-            target-frameworks: 'net9.0;net9.0-maccatalyst'  # 包含macOS特定框架
+            target-frameworks: 'net9.0-maccatalyst'  # 包含macOS特定框架
             runtime: 'osx-x64'  # Intel芯片macOS
           - os: macos-latest
-            target-frameworks: 'net9.0;net9.0-maccatalyst'
+            target-frameworks: 'net9.0-maccatalyst'
             runtime: 'osx-arm64'  # Apple Silicon芯片macOS
           
           # iOS 10.14 x64架构
@@ -64,15 +64,11 @@ jobs:
         sudo apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu
 
     # 还原依赖（包含运行时和平台特定依赖）
-    # - name: Restore dependencies
-    #   run: dotnet restore AliFsmnVad/AliFsmnVad.csproj 
-    #     -p:TargetFrameworks='${{ matrix.target-frameworks }}'
-    #     -p:RuntimeIdentifier=${{ matrix.runtime }}
-    #     ${{ matrix.ios-version != '' && format('-p:IOSVersion={0}', matrix.ios-version) || '' }}
     - name: Restore dependencies
       run: dotnet restore AliFsmnVad/AliFsmnVad.csproj 
+        -p:TargetFrameworks='${{ matrix.target-frameworks }}'
         -p:RuntimeIdentifier=${{ matrix.runtime }}
-        ${{ matrix.ios-version != '' && format('-p:IOSVersion={0}', matrix.ios-version) || '' }}  # 传递iOS版本（如果指定）
+        ${{ matrix.ios-version != '' && format('-p:IOSVersion={0}', matrix.ios-version) || '' }} # 传递iOS版本（如果指定）
 
     # # 构建指定架构和平台的版本
     # - name: Build (${{ matrix.runtime }})
