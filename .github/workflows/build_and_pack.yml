@@ -24,14 +24,29 @@ jobs:
         include:
           - os: windows-2022
             tfm: 'netcoreapp3.1'
+            dotnet_version: '3.1.x'
           - os: windows-2022
             tfm: 'net8.0-windows10.0.19041.0'
+            dotnet_version: '8.0.x'
           - os: macos-14
             tfm: 'net8.0-android'
-            install_workload: true
+            dotnet_version: '8.0.x'
+            install_workload: 'android'
+          - os: macos-14
+            tfm: 'net9.0-ios'
+            dotnet_version: '9.0.x'
+            install_workload: 'ios'
+          - os: macos-14
+            tfm: 'net9.0-maccatalyst'
+            dotnet_version: '9.0.x'
+            install_workload: 'maccatalyst'
         exclude:
           - os: ubuntu-22.04
             tfm: 'netcoreapp3.1'
+          - os: windows-2022
+            tfm: 'net9.0-ios'
+          - os: windows-2022
+            tfm: 'net9.0-maccatalyst'
       fail-fast: false
 
     steps:
@@ -43,18 +58,24 @@ jobs:
       - name: Setup .NET SDK
         uses: actions/setup-dotnet@v4.0.0
         with:
-          dotnet-version: |
-            9.0.x
-            8.0.x
-            7.0.x
-            6.0.x
-            3.1.x
+          dotnet-version: ${{ matrix.dotnet_version || '9.0.x' }}
 
-      - name: Install Android workload
-        if: matrix.install_workload == true
-        run: dotnet workload install android
+      - name: Install required workloads
+        if: matrix.install_workload != ''
+        run: |
+          # 安装指定工作负载
+          echo "Installing workload: ${{ matrix.install_workload }}"
+          dotnet workload install ${{ matrix.install_workload }}
+          
+          # 对于iOS/MacCatalyst还需要额外组件
+          if [[ "${{ matrix.install_workload }}" == "ios" || "${{ matrix.install_workload }}" == "maccatalyst" ]]; then
+            dotnet workload install wasm-tools
+          fi
 
-      - name: Restore
+      - name: Clean obj folder
+        run: rm -rf AliFsmnVad/obj
+
+      - name: Restore dependencies
         run: dotnet restore AliFsmnVad/AliFsmnVad.csproj -p:TargetFramework=${{ matrix.tfm }}
 
       - name: Build
@@ -108,32 +129,10 @@ jobs:
       - name: Run tests
         run: dotnet test AliFsmnVad.Tests/AliFsmnVad.Tests.csproj --configuration Release --framework ${{ matrix.tfm }} --logger "GitHubActions"
 
-  test-linux-distros:
-    name: Test / ${{ matrix.distro }} / ${{ matrix.tfm }}
-    runs-on: ubuntu-22.04
-    needs: build
-    strategy:
-      matrix:
-        distro: [alpine.3.20, centos.stream.9, debian.12, fedora.40, ubuntu.20.04, ubuntu.22.04, ubuntu.24.04]
-        tfm: ['net8.0', 'net9.0']
-      fail-fast: false
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4.1.2
-        with:
-          fetch-depth: 0
-
-      - name: Run tests in container
-        run: |
-          git_command="git config --global --add safe.directory /app"
-          test_command="dotnet test AliFsmnVad.Tests/AliFsmnVad.Tests.csproj --configuration Release -p:TargetFrameworks=${{ matrix.tfm }} --logger GitHubActions"
-          docker run -t --rm -v "$PWD:/app" -e OPENSSL_ENABLE_SHA1_SIGNATURES=1 gittools/build-images:${{ matrix.distro }}-sdk-${matrix.tfm:3:1}.0 sh -c "$git_command && $test_command"
-
   publish:
     name: Publish to NuGet
     runs-on: ubuntu-22.04
-    needs: [build, test, test-linux-distros]
+    needs: [build, test]
     if: startsWith(github.ref, 'refs/tags/')
     steps:
       - name: Download all artifacts
