@@ -65,7 +65,7 @@ jobs:
       run: dotnet nuget push ./nupkg/AliFsmnVad/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
     # 新增：上传打包后的文件作为 Artifact
     - name: Upload NuGet packages
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: manyspeech-nupkg  # Artifact 名称（自定义，便于识别）
         path: ./nupkg/AliFsmnVad/*.nupkg  # 打包文件的路径（匹配所有 .nupkg 文件）
