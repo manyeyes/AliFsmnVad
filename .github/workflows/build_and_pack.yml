@@ -58,7 +58,7 @@ jobs:
       # run: dotnet build AliFsmnVad.sln -p:ExcludeFromBuild=true -p:ExcludedProjects="AliFsmnVad.Examples.csproj" --configuration Release --no-restore -f ${{ matrix.target-frameworks }} AliFsmnVad/AliFsmnVad.csproj
     
     - name: Pack
-      run: dotnet pack AliFsmnVad/AliFsmnVad.csproj --configuration Release --no-build --output ./nupkg/AliFsmnVad -p:TargetFrameworks='${{ matrix.target-frameworks }}' AliFsmnVad/AliFsmnVad.csproj
+      run: dotnet pack AliFsmnVad/AliFsmnVad.csproj --configuration Release --no-build --output ./nupkg/AliFsmnVad -p:TargetFrameworks='${{ matrix.target-frameworks }}'
 
     - name: Publish to NuGet
       if: matrix.os == 'windows-latest' && startsWith(github.ref, 'refs/tags/v')
