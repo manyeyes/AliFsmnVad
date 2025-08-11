@@ -82,6 +82,7 @@ jobs:
         ${{ matrix.runtime == 'ios-x64' && '-p:EnableAssemblyILStripping=false' || '' }}  # iOS优化：禁用IL剥离（可选）
 
     # 按平台和架构打包（输出到不同目录避免冲突）
+    # 修复后的 Pack 步骤
     - name: Pack (${{ matrix.runtime }})
       run: dotnet pack AliFsmnVad/AliFsmnVad.csproj 
         --configuration Release 
@@ -90,8 +91,8 @@ jobs:
         -p:TargetFrameworks='${{ matrix.target-frameworks }}' 
         -p:RuntimeIdentifier=${{ matrix.runtime }} 
         -p:IncludeRuntimeDependencies=true 
-        -p:IncludeNativeLibrariesForSelfExtract=true  # 包含原生库（如适用）
-        ${{ matrix.ios-version && '-p:IOSVersion=' + matrix.ios-version || '' }}
+        -p:IncludeNativeLibrariesForSelfExtract=true 
+        ${{ matrix.ios-version != '' && format('-p:IOSVersion={0}', matrix.ios-version) || '' }}
 
     # 上传按架构区分的产物
     - name: Upload NuGet packages (${{ matrix.runtime }})
