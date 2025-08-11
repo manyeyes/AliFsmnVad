@@ -68,7 +68,7 @@ jobs:
       run: dotnet restore AliFsmnVad/AliFsmnVad.csproj 
         -p:TargetFrameworks='${{ matrix.target-frameworks }}' 
         -p:RuntimeIdentifier=${{ matrix.runtime }}
-        ${{ matrix.ios-version && '-p:IOSVersion=' + matrix.ios-version || '' }}  # 传递iOS版本（如果指定）
+        ${{ matrix.ios-version != '' && format('-p:IOSVersion={0}', matrix.ios-version) || '' }}  # 传递iOS版本（如果指定）
 
     # 构建指定架构和平台的版本
     - name: Build (${{ matrix.runtime }})
@@ -78,7 +78,7 @@ jobs:
         -p:TargetFrameworks='${{ matrix.target-frameworks }}' 
         -p:RuntimeIdentifier=${{ matrix.runtime }} 
         -p:SelfContained=false 
-        ${{ matrix.ios-version && '-p:IOSVersion=' + matrix.ios-version || '' }}
+        ${{ matrix.ios-version != '' && format('-p:IOSVersion={0}', matrix.ios-version) || '' }}
         ${{ matrix.runtime == 'ios-x64' && '-p:EnableAssemblyILStripping=false' || '' }}  # iOS优化：禁用IL剥离（可选）
 
     # 按平台和架构打包（输出到不同目录避免冲突）
