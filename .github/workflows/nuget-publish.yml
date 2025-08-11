@@ -15,9 +15,9 @@ jobs:
       matrix:
         # 为不同操作系统定义支持的目标框架
         include:
-          - os: windows-latest
-            # dotnet-version: '9.0.x'
-            target-frameworks: 'netstandard2.0;netstandard2.1;netcoreapp3.1;net6.0;net7.0;net8.0;net9.0;net8.0-windows10.0.19041.0;net8.0-android'
+          # - os: windows-latest
+          #   # dotnet-version: '9.0.x'
+          #   target-frameworks: 'netstandard2.0;netstandard2.1;netcoreapp3.1;net6.0;net7.0;net8.0;net9.0;net8.0-windows10.0.19041.0;net8.0-android'
           - os: ubuntu-latest
             # dotnet-version: '9.0.x'
             target-frameworks: 'net9.0'
