@@ -1,4 +1,4 @@
-name: Build and Pack AliFsmnVad
+name: Build, Pack and Publish to NuGet
 
 on:
   push:
@@ -9,106 +9,63 @@ on:
   workflow_dispatch:
 
 jobs:
-  build_linux:
-    runs-on: ubuntu-latest
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        # 为不同操作系统定义支持的目标框架
+        include:
+          # - os: windows-latest
+          #   # dotnet-version: '9.0.x'
+          #   target-frameworks: 'netstandard2.0;netstandard2.1;netcoreapp3.1;net6.0;net7.0;net8.0;net9.0;net8.0-windows10.0.19041.0;net8.0-android'
+          - os: ubuntu-latest
+            # dotnet-version: '9.0.x'
+            target-frameworks: 'net9.0'
+          - os: macos-latest
+            # dotnet-version: '9.0.x'  # 使用最新稳定版SDK
+            # 在macOS上只构建跨平台目标框架
+            target-frameworks: 'net9.0'
+            # 排除Windows和Android特定目标
+            # exclude-platform-specific: true
     steps:
     - uses: actions/checkout@v4
-    
-    - name: Setup .NET 9
+
+    # - name: Setup .NET SDK ${{ matrix.dotnet-version }}
+    #   uses: actions/setup-dotnet@v4
+    #   with:
+    #     dotnet-version: ${{ matrix.dotnet-version }}
+
+    - name: Setup .NET SDKs
       uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: '9.0.x'
-        
-    - name: Restore and Build (Linux)
-      run: |
-        dotnet restore AliFsmnVad/AliFsmnVad.csproj
-        dotnet build AliFsmnVad/AliFsmnVad.csproj -c Release -f net9.0
-        
-    - name: Pack (Linux)
-      run: |
-        mkdir -p nupkg
-        dotnet pack AliFsmnVad/AliFsmnVad.csproj -c Release -f net9.0 -o ./nupkg
-        
-    - name: Upload Linux Artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: linux-nupkg
-        path: ./nupkg/*.nupkg
+        dotnet-version: |
+          3.1.x
+          6.0.x
+          7.0.x
+          8.0.x
+          9.0.x
+      
+    # 还原当前系统所需的工作负载（仅在需要时）
+    - name: Restore .NET workloads
+      run: dotnet workload restore
+      if: contains(matrix.target-frameworks, 'android') || contains(matrix.target-frameworks, 'ios') || contains(matrix.target-frameworks, 'maccatalyst')
 
-  build_macos:
-    runs-on: macos-latest
-    steps:
-    - uses: actions/checkout@v4
+    - name: Restore dependencies
+      run: dotnet restore AliFsmnVad/AliFsmnVad.csproj -p:TargetFrameworks='${{ matrix.target-frameworks }}'
+
+    - name: Build
+      run: dotnet build AliFsmnVad/AliFsmnVad.csproj -p:ExcludeFromBuild=true -p:ExcludedProjects="AliFsmnVad.Examples.csproj" --configuration Release --no-restore -f ${{ matrix.target-frameworks }} AliFsmnVad/AliFsmnVad.csproj
+      # run: dotnet build AliFsmnVad.sln -p:ExcludeFromBuild=true -p:ExcludedProjects="AliFsmnVad.Examples.csproj" --configuration Release --no-restore -f ${{ matrix.target-frameworks }} AliFsmnVad/AliFsmnVad.csproj
     
-    - name: Setup .NET 9
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: '9.0.x'
-        
-    - name: Install iOS/MacCatalyst workloads
-      run: |
-        dotnet workload install ios maccatalyst
-        
-    - name: Restore and Build (Mac)
-      run: |
-        dotnet restore AliFsmnVad/AliFsmnVad.csproj
-        dotnet build AliFsmnVad/AliFsmnVad.csproj -c Release -f net9.0
-        dotnet build AliFsmnVad/AliFsmnVad.csproj -c Release -f net9.0-ios
-        dotnet build AliFsmnVad/AliFsmnVad.csproj -c Release -f net9.0-maccatalyst
-        
-    - name: Pack (Mac)
-      run: |
-        mkdir -p nupkg
-        dotnet pack AliFsmnVad/AliFsmnVad.csproj -c Release -f net9.0 -o ./nupkg
-        dotnet pack AliFsmnVad/AliFsmnVad.csproj -c Release -f net9.0-ios -o ./nupkg
-        dotnet pack AliFsmnVad/AliFsmnVad.csproj -c Release -f net9.0-maccatalyst -o ./nupkg
-        
-    - name: Upload Mac Artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: mac-nupkg
-        path: ./nupkg/*.nupkg
+    - name: Pack
+      run: dotnet pack AliFsmnVad/AliFsmnVad.csproj --configuration Release --no-build --output ./nupkg/AliFsmnVad -p:TargetFrameworks='${{ matrix.target-frameworks }}' AliFsmnVad/AliFsmnVad.csproj
 
-  # 注意：已注释的 Android 部分如果取消注释需要确保 jobs.publish_nuget.needs 也取消对应依赖
-  # build_windows_android:
-  #   runs-on: windows-latest
-  #   steps:
-  #   - uses: actions/checkout@v4
-  #   - name: Setup .NET 9
-  #     uses: actions/setup-dotnet@v4
-  #     with:
-  #       dotnet-version: '9.0.x'
-  #   - name: Install Android workload
-  #     run: dotnet workload install android
-  #   - name: Restore and Build (Android)
-  #     run: |
-  #       dotnet restore AliFsmnVad/AliFsmnVad.csproj
-  #       dotnet build AliFsmnVad/AliFsmnVad.csproj -c Release -f net9.0-android
-  #   - name: Pack (Android)
-  #     run: |
-  #       mkdir -p nupkg
-  #       dotnet pack AliFsmnVad/AliFsmnVad.csproj -c Release -f net9.0-android -o ./nupkg
-  #   - name: Upload Android Artifact
-  #     uses: actions/upload-artifact@v4
-  #     with:
-  #       name: android-nupkg
-  #       path: ./nupkg/*.nupkg
-
-  publish_nuget:
-    needs: [build_linux, build_macos]  # 如果启用 Android 需要添加 build_windows_android
-    runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/v')
-    steps:
-    - name: Download Artifacts
-      uses: actions/download-artifact@v4
-      with:
-        path: ./merged-nupkg
-        pattern: '*-nupkg/*'
-        merge-multiple: true
-        
     - name: Publish to NuGet
+      if: matrix.os == 'windows-latest' && startsWith(github.ref, 'refs/tags/v')
+      run: dotnet nuget push ./nupkg/AliFsmnVad/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
+
+    - name: Cleanup on failure
+      if: failure()
       run: |
-        dotnet nuget push ./merged-nupkg/*.nupkg \
-          --api-key ${{ secrets.NUGET_API_KEY }} \
-          --source https://api.nuget.org/v3/index.json \
-          --skip-duplicate
+        git tag -d ${{ steps.version.outputs.new_version }} || true
+        git push origin :refs/tags/${{ steps.version.outputs.new_version }} || true
