@@ -70,14 +70,26 @@ jobs:
         -p:RuntimeIdentifier=${{ matrix.runtime }}
         ${{ matrix.ios-version != '' && format('-p:IOSVersion={0}', matrix.ios-version) || '' }}  # 传递iOS版本（如果指定）
 
-    # 构建指定架构和平台的版本
-    - name: Build (${{ matrix.runtime }})
-      run: dotnet build AliFsmnVad/AliFsmnVad.csproj 
+    # # 构建指定架构和平台的版本
+    # - name: Build (${{ matrix.runtime }})
+    #   run: dotnet build AliFsmnVad/AliFsmnVad.csproj 
+    #     --configuration Release 
+    #     --no-restore 
+    #     -p:TargetFrameworks='${{ matrix.target-frameworks }}' 
+    #     -p:RuntimeIdentifier=${{ matrix.runtime }} 
+    #     -p:SelfContained=false 
+    #     ${{ matrix.ios-version != '' && format('-p:IOSVersion={0}', matrix.ios-version) || '' }}
+    #     ${{ matrix.runtime == 'ios-x64' && '-p:EnableAssemblyILStripping=false' || '' }}  # iOS优化：禁用IL剥离（可选）
+
+    - name: Build
+      run: dotnet build AliFsmnVad.sln 
         --configuration Release 
         --no-restore 
         -p:TargetFrameworks='${{ matrix.target-frameworks }}' 
         -p:RuntimeIdentifier=${{ matrix.runtime }} 
         -p:SelfContained=false 
+        -p:ExcludeFromBuild=true 
+        -p:ExcludedProjects="AliFsmnVad.Examples.csproj"
         ${{ matrix.ios-version != '' && format('-p:IOSVersion={0}', matrix.ios-version) || '' }}
         ${{ matrix.runtime == 'ios-x64' && '-p:EnableAssemblyILStripping=false' || '' }}  # iOS优化：禁用IL剥离（可选）
 
