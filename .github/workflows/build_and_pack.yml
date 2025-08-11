@@ -12,43 +12,50 @@ jobs:
     strategy:
       matrix:
         include:
-          # Linux 构建跨平台目标
+          # Linux 构建
           - os: ubuntu-latest
-            target_framework: 'netstandard2.0'
-            dotnet_version: '6.0.x'
+            target_framework: netstandard2.0
+            dotnet_version: 6.0.x
           - os: ubuntu-latest
-            target_framework: 'netstandard2.1'
-            dotnet_version: '7.0.x'
+            target_framework: netstandard2.1
+            dotnet_version: 7.0.x
           - os: ubuntu-latest
-            target_framework: 'netcoreapp3.1'
-            dotnet_version: '3.1.x'
+            target_framework: net6.0
+            dotnet_version: 6.0.x
           - os: ubuntu-latest
-            target_framework: 'net6.0'
-            dotnet_version: '6.0.x'
+            target_framework: net7.0
+            dotnet_version: 7.0.x
           - os: ubuntu-latest
-            target_framework: 'net7.0'
-            dotnet_version: '7.0.x'
+            target_framework: net8.0
+            dotnet_version: 8.0.x
           - os: ubuntu-latest
-            target_framework: 'net8.0'
-            dotnet_version: '8.0.x'
-          - os: ubuntu-latest
-            target_framework: 'net9.0'
-            dotnet_version: '9.0.x'
+            target_framework: net9.0
+            dotnet_version: 9.0.x
             
-          # Windows 构建 Windows 特定目标
+          # Windows 构建 (包含 netcoreapp3.1 和 Windows 特定目标)
           - os: windows-latest
-            target_framework: 'net8.0-windows10.0.19041.0'
-            dotnet_version: '8.0.x'
+            target_framework: netcoreapp3.1
+            dotnet_version: 3.1.x
+          - os: windows-latest
+            target_framework: net8.0-windows10.0.19041.0
+            dotnet_version: 8.0.x
             
-          # macOS 构建 Android 目标（也可用 windows-latest）
+          # macOS 构建 Android
           - os: macos-latest
-            target_framework: 'net8.0-android'
-            dotnet_version: '8.0.x'
+            target_framework: net8.0-android
+            dotnet_version: 8.0.x
             install_workload: true
-            
+
     steps:
     - uses: actions/checkout@v4
     
+    # 特殊处理 Ubuntu 的 OpenSSL 问题
+    - name: Install OpenSSL (Linux only)
+      if: runner.os == 'Linux' && matrix.target_framework == 'netcoreapp3.1'
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libssl1.0-dev
+        
     - name: Setup .NET SDK
       uses: actions/setup-dotnet@v4
       with:
