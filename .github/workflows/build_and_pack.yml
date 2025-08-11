@@ -1,71 +1,95 @@
-name: Build, Pack and Publish to NuGet
+name: Multi-target Build and Pack
 
 on:
   push:
     branches: [ master ]
     tags: [ 'v*' ]
-  pull_request:
-    branches: [ master ]
   workflow_dispatch:
 
 jobs:
-  build:
+  build_and_pack:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        # 为不同操作系统定义支持的目标框架
         include:
-          # - os: windows-latest
-          #   # dotnet-version: '9.0.x'
-          #   target-frameworks: 'netstandard2.0;netstandard2.1;netcoreapp3.1;net6.0;net7.0;net8.0;net9.0;net8.0-windows10.0.19041.0;net8.0-android'
+          # Linux 构建跨平台目标
           - os: ubuntu-latest
-            # dotnet-version: '9.0.x'
-            target-frameworks: 'net9.0'
+            target_framework: 'netstandard2.0'
+            dotnet_version: '6.0.x'
+          - os: ubuntu-latest
+            target_framework: 'netstandard2.1'
+            dotnet_version: '7.0.x'
+          - os: ubuntu-latest
+            target_framework: 'netcoreapp3.1'
+            dotnet_version: '3.1.x'
+          - os: ubuntu-latest
+            target_framework: 'net6.0'
+            dotnet_version: '6.0.x'
+          - os: ubuntu-latest
+            target_framework: 'net7.0'
+            dotnet_version: '7.0.x'
+          - os: ubuntu-latest
+            target_framework: 'net8.0'
+            dotnet_version: '8.0.x'
+          - os: ubuntu-latest
+            target_framework: 'net9.0'
+            dotnet_version: '9.0.x'
+            
+          # Windows 构建 Windows 特定目标
+          - os: windows-latest
+            target_framework: 'net8.0-windows10.0.19041.0'
+            dotnet_version: '8.0.x'
+            
+          # macOS 构建 Android 目标（也可用 windows-latest）
           - os: macos-latest
-            # dotnet-version: '9.0.x'  # 使用最新稳定版SDK
-            # 在macOS上只构建跨平台目标框架
-            target-frameworks: 'net9.0'
-            # 排除Windows和Android特定目标
-            # exclude-platform-specific: true
+            target_framework: 'net8.0-android'
+            dotnet_version: '8.0.x'
+            install_workload: true
+            
     steps:
     - uses: actions/checkout@v4
-
-    # - name: Setup .NET SDK ${{ matrix.dotnet-version }}
-    #   uses: actions/setup-dotnet@v4
-    #   with:
-    #     dotnet-version: ${{ matrix.dotnet-version }}
-
-    - name: Setup .NET SDKs
+    
+    - name: Setup .NET SDK
       uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: |
-          3.1.x
-          6.0.x
-          7.0.x
-          8.0.x
-          9.0.x
-      
-    # 还原当前系统所需的工作负载（仅在需要时）
-    - name: Restore .NET workloads
-      run: dotnet workload restore
-      if: contains(matrix.target-frameworks, 'android') || contains(matrix.target-frameworks, 'ios') || contains(matrix.target-frameworks, 'maccatalyst')
-
+        dotnet-version: ${{ matrix.dotnet_version }}
+        
+    - name: Install Android workload (if needed)
+      if: matrix.install_workload == true
+      run: dotnet workload install android
+        
     - name: Restore dependencies
-      run: dotnet restore AliFsmnVad/AliFsmnVad.csproj -p:TargetFrameworks='${{ matrix.target-frameworks }}'
-
+      run: dotnet restore AliFsmnVad/AliFsmnVad.csproj -p:TargetFramework=${{ matrix.target_framework }}
+      
     - name: Build
-      run: dotnet build AliFsmnVad/AliFsmnVad.csproj --configuration Release --no-restore -f ${{ matrix.target-frameworks }} 
-      # run: dotnet build AliFsmnVad.sln -p:ExcludeFromBuild=true -p:ExcludedProjects="AliFsmnVad.Examples.csproj" --configuration Release --no-restore -f ${{ matrix.target-frameworks }} AliFsmnVad/AliFsmnVad.csproj
-    
+      run: dotnet build AliFsmnVad/AliFsmnVad.csproj -c Release --no-restore -p:TargetFramework=${{ matrix.target_framework }}
+      
     - name: Pack
-      run: dotnet pack AliFsmnVad/AliFsmnVad.csproj --configuration Release --no-build --output ./nupkg/AliFsmnVad -p:TargetFrameworks='${{ matrix.target-frameworks }}' AliFsmnVad/AliFsmnVad.csproj
-
-    - name: Publish to NuGet
-      if: matrix.os == 'windows-latest' && startsWith(github.ref, 'refs/tags/v')
-      run: dotnet nuget push ./nupkg/AliFsmnVad/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
-
-    - name: Cleanup on failure
-      if: failure()
       run: |
-        git tag -d ${{ steps.version.outputs.new_version }} || true
-        git push origin :refs/tags/${{ steps.version.outputs.new_version }} || true
+        mkdir -p nupkg
+        dotnet pack AliFsmnVad/AliFsmnVad.csproj -c Release --no-build -o ./nupkg -p:TargetFramework=${{ matrix.target_framework }}
+        
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: nupkg-${{ matrix.target_framework }}
+        path: ./nupkg/*.nupkg
+
+  publish_nuget:
+    needs: build_and_pack
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+    steps:
+    - name: Download all artifacts
+      uses: actions/download-artifact@v4
+      with:
+        path: ./merged-nupkg
+        pattern: 'nupkg-*/*'
+        merge-multiple: true
+        
+    - name: Publish to NuGet
+      run: |
+        dotnet nuget push ./merged-nupkg/*.nupkg \
+          --api-key ${{ secrets.NUGET_API_KEY }} \
+          --source https://api.nuget.org/v3/index.json \
+          --skip-duplicate
